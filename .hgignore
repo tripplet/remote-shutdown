@@ -1,0 +1,11 @@
+syntax: glob
+
+Thumbs.db
+RemoteShutdown/Release/*
+RemoteShutdown/Debug/*
+Release/*
+Debug/*
+*.pdb
+*.ncb
+*.ilk
+*.suo
