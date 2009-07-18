@@ -107,7 +107,7 @@ int MessageRecieved(const char* message,in_addr ip,int protocol) {
 		log->writeEntry("ShutdownPriv achieved");
 
 		// Shutdown pc
-		//ExitWindowsEx(EWX_POWEROFF | EWX_FORCEIFHUNG,0);
+		ExitWindowsEx(EWX_POWEROFF | EWX_FORCEIFHUNG,0);
 		log->writeEntry("AdminShutdown performed");
 		return 1;
 	}
