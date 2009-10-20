@@ -34,6 +34,9 @@ int MessageRecieved(const char* message,in_addr ip,int protocol) {
 	char sShutdownCMDAdmin[MAX_COMPUTERNAME_LENGTH + 1 + 128];
 	char *sMessage = new char[strlen(message)+1];
 
+	if (strlen(message)==0)
+		return -10;
+
 	log->writeEntry("MessageRechived");
 	
 	if (protocol==UDP_MESSAGE)

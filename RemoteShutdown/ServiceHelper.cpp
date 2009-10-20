@@ -133,6 +133,11 @@ BOOL InstallService() {
 
      NULL); // no password
 
+	SERVICE_DESCRIPTION sd;
+	sd.lpDescription = "Ermöglicht das Herunterfahren des PCs per Netzwerk";
+
+	ChangeServiceConfig2(schService,SERVICE_CONFIG_DESCRIPTION,&sd);
+
 	delete[] strPath;
 
   if (schService == NULL)
