@@ -8,4 +8,5 @@ Debug/*
 *.pdb
 *.ncb
 *.ilk
+*.aps
 *.suo
