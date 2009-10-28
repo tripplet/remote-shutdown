@@ -37,7 +37,7 @@ int MessageRecieved(const char* message,in_addr ip,int protocol) {
 	if (strlen(message)==0)
 		return -10;
 
-	log->writeEntry("MessageRechived");
+	log->writeEntry("\nMessageRechived");
 	
 	if (protocol==UDP_MESSAGE)
 		log->writeEntry("UDP:");
@@ -69,7 +69,7 @@ int MessageRecieved(const char* message,in_addr ip,int protocol) {
 		log->writeEntry("Shutdown command recognized");
 
 		if (isUserLoggedOn()) {
-			log->writeEntry("-> User logged on -> EXIT");
+			log->writeEntry("-> User logged on -> EXIT\n");
 			return -1;
 		}
 		
@@ -77,7 +77,7 @@ int MessageRecieved(const char* message,in_addr ip,int protocol) {
 
 		// get shutdown priv
 		if (!EnableShutdownPrivNT()) {	
-			log->writeEntry("Failed to achie ShutdownPriv -> EXIT");
+			log->writeEntry("Failed to achie ShutdownPriv -> EXIT\n");
 			return -3;
 		}
 
@@ -85,7 +85,7 @@ int MessageRecieved(const char* message,in_addr ip,int protocol) {
 
 		// Shutdown pc
 		ExitWindowsEx(EWX_POWEROFF | EWX_FORCEIFHUNG,0);
-		log->writeEntry("Shutdown performed");
+		log->writeEntry("Shutdown performed\n");
 		return 1;
 	}
 
@@ -103,7 +103,7 @@ int MessageRecieved(const char* message,in_addr ip,int protocol) {
 
 		// get shutdown priv
 		if (!EnableShutdownPrivNT()) {	
-			log->writeEntry("Failed to achie ShutdownPriv -> EXIT");
+			log->writeEntry("Failed to achie ShutdownPriv -> EXIT\n");
 			return -3;
 		}
 
@@ -111,7 +111,7 @@ int MessageRecieved(const char* message,in_addr ip,int protocol) {
 
 		// Shutdown pc
 		ExitWindowsEx(EWX_POWEROFF | EWX_FORCEIFHUNG,0);
-		log->writeEntry("AdminShutdown performed");
+		log->writeEntry("AdminShutdown performed\n");
 		return 1;
 	}
 
