@@ -12,6 +12,7 @@ HANDLE hNetUDPThread;
 bool EnableShutdownPrivNT();
 bool enableDEP();
 bool isUserLoggedOn();
+bool isRemoteUserLoggedIn();
 
 void ServiceLoop() {
 	log->writeEntry("Service started");
@@ -69,15 +70,20 @@ int MessageRecieved(const char* message,in_addr ip,int protocol) {
 		log->writeEntry("Shutdown command recognized");
 
 		if (isUserLoggedOn()) {
-			log->writeEntry("-> User logged on -> EXIT\n");
+			log->writeEntry("-> User logged in -> EXIT\n");
 			return -1;
 		}
+
+		if (isRemoteUserLoggedIn()) {
+			log->writeEntry("-> RemoteUser logged in -> EXIT\n");
+			return -1;
+		}		
 		
-		log->writeEntry("-> User not logged on");
+		log->writeEntry("-> User not logged in");
 
 		// get shutdown priv
 		if (!EnableShutdownPrivNT()) {	
-			log->writeEntry("Failed to achie ShutdownPriv -> EXIT\n");
+			log->writeEntry("Failed to achieve ShutdownPriv -> EXIT\n");
 			return -3;
 		}
 
@@ -97,13 +103,15 @@ int MessageRecieved(const char* message,in_addr ip,int protocol) {
 		log->writeEntry("Admin Shutdown command recognized");
 
 		if (isUserLoggedOn())
-			log->writeEntry("-> User logged on");
-		else	
+			log->writeEntry("-> User logged in");
+		else if (isRemoteUserLoggedIn())
+			log->writeEntry("-> RemoteUser logged in");
+		else
 			log->writeEntry("-> User not logged on");
 
 		// get shutdown priv
 		if (!EnableShutdownPrivNT()) {	
-			log->writeEntry("Failed to achie ShutdownPriv -> EXIT\n");
+			log->writeEntry("Failed to achieve ShutdownPriv -> EXIT\n");
 			return -3;
 		}
 
@@ -114,7 +122,7 @@ int MessageRecieved(const char* message,in_addr ip,int protocol) {
 		log->writeEntry("AdminShutdown performed\n");
 		return 1;
 	}
-
+	
 	return -4;
 }
 
@@ -144,6 +152,23 @@ int main(int argc, char* argv[]) {
   return 0;
 }
 
+bool isRemoteUserLoggedIn() {
+	PWTS_SESSION_INFO ppSessionInfo = NULL;
+	DWORD pCount;
+
+	BOOL bRet = WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE,0,1,&ppSessionInfo,&pCount);
+
+	if (!bRet) {
+		return false;
+	}
+
+	for(DWORD idx=0;idx<pCount;idx++) {
+		if (ppSessionInfo[idx].State == WTSActive)
+			return true;
+	}
+
+	return false;
+}
 
 bool isUserLoggedOn() {
   HANDLE hToken    = NULL;
