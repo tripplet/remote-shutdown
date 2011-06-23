@@ -3,7 +3,7 @@
 
 /** ########## Global variables ########## **/
 bool bRunning = true;
-LogFile *log;
+LogFile *loggingFile;
 
 HANDLE hNetTCPThread;
 HANDLE hNetUDPThread;
@@ -15,14 +15,14 @@ bool isUserLoggedOn();
 bool isRemoteUserLoggedIn();
 
 void ServiceLoop() {
-	log->writeEntry("Service started");
+	loggingFile->writeEntry("Service started");
 	hNetTCPThread = StartNetTCPLoopThread(INFORM_PORT);
 	hNetUDPThread = StartNetUDPLoopThread(INFORM_PORT);
 	SuspendThread(GetCurrentThread());
 }
 
 void ServiceQuit() {
-	log->writeEntry("Service quit");
+	loggingFile->writeEntry("Service quit");
 	TerminateThread(hNetTCPThread,0);
 	TerminateThread(hNetUDPThread,0);
 }
@@ -38,14 +38,16 @@ int MessageRecieved(const char* message,in_addr ip,int protocol) {
 	if (strlen(message)==0)
 		return -10;
 
-	log->writeEntry("\nMessageRechived");
+  loggingFile->newTmpEntry();
+	loggingFile->addTmpEntry("MessageRechived ");
 	
 	if (protocol==UDP_MESSAGE)
-		log->writeEntry("UDP:");
+		loggingFile->addTmpEntry("(UDP): ");
 	else
-		log->writeEntry("TCP:");
+		loggingFile->addTmpEntry("(TCP): ");
 	
-	log->writeEntry(message,false);
+	loggingFile->addTmpEntry(message);
+  loggingFile->writeTmpEntry();
 
 	if (0==GetComputerName(sPCName,&bufCharCount))
 		return -2;
@@ -67,31 +69,36 @@ int MessageRecieved(const char* message,in_addr ip,int protocol) {
 	if (compare==0) {	
 		delete[] sMessage;
 
-		log->writeEntry("Shutdown command recognized");
+    loggingFile->newTmpEntry();
+		loggingFile->addTmpEntry("Shutdown command recognized");
 
 		if (isUserLoggedOn()) {
-			log->writeEntry("-> User logged in -> EXIT\n");
+			loggingFile->addTmpEntry(" -> User logged in -> ABORT\n");
+      loggingFile->writeTmpEntry();
 			return -1;
 		}
 
 		if (isRemoteUserLoggedIn()) {
-			log->writeEntry("-> RemoteUser logged in -> EXIT\n");
+			loggingFile->addTmpEntry(" -> RemoteUser logged in -> ABORT\n");
+      loggingFile->writeTmpEntry();
 			return -1;
 		}		
 		
-		log->writeEntry("-> User not logged in");
+		loggingFile->writeEntry(" -> User not logged in");
 
 		// get shutdown priv
 		if (!EnableShutdownPrivNT()) {	
-			log->writeEntry("Failed to achieve ShutdownPriv -> EXIT\n");
+			loggingFile->addTmpEntry(" -> Failed to achieve ShutdownPriv -> ABORT\n");
+      loggingFile->writeTmpEntry();
 			return -3;
 		}
 
-		log->writeEntry("ShutdownPriv achieved");
+		loggingFile->addTmpEntry(" -> ShutdownPriv achieved");
 
 		// Shutdown pc
 		ExitWindowsEx(EWX_POWEROFF | EWX_FORCEIFHUNG,0);
-		log->writeEntry("Shutdown performed\n");
+		loggingFile->addTmpEntry(" -> Shutdown performed");
+    loggingFile->writeTmpEntry();
 		return 1;
 	}
 
@@ -100,26 +107,29 @@ int MessageRecieved(const char* message,in_addr ip,int protocol) {
 	if (compare==0) {	
 		delete[] sMessage;
 
-		log->writeEntry("Admin Shutdown command recognized");
+    loggingFile->newTmpEntry();
+		loggingFile->addTmpEntry("Admin Shutdown command recognized");
 
 		if (isUserLoggedOn())
-			log->writeEntry("-> User logged in");
+			loggingFile->addTmpEntry(" -> User logged in");
 		else if (isRemoteUserLoggedIn())
-			log->writeEntry("-> RemoteUser logged in");
+			loggingFile->addTmpEntry(" -> RemoteUser logged in");
 		else
-			log->writeEntry("-> User not logged on");
+			loggingFile->addTmpEntry(" -> User not logged on");
 
 		// get shutdown priv
 		if (!EnableShutdownPrivNT()) {	
-			log->writeEntry("Failed to achieve ShutdownPriv -> EXIT\n");
+			loggingFile->addTmpEntry(" -> Failed to achieve ShutdownPriv -> ABORT\n");
+      loggingFile->writeTmpEntry();
 			return -3;
 		}
 
-		log->writeEntry("ShutdownPriv achieved");
+		loggingFile->addTmpEntry(" -> ShutdownPriv achieved");
 
 		// Shutdown pc
 		ExitWindowsEx(EWX_POWEROFF | EWX_FORCEIFHUNG,0);
-		log->writeEntry("AdminShutdown performed\n");
+		loggingFile->writeEntry(" -> AdminShutdown performed\n");
+    loggingFile->writeTmpEntry();
 		return 1;
 	}
 	

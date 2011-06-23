@@ -4,14 +4,14 @@ SERVICE_STATUS m_ServiceStatus;
 SERVICE_STATUS_HANDLE m_ServiceStatusHandle;
 
 extern bool bRunning;
-extern LogFile *log;
+extern LogFile *loggingFile;
 
 void WINAPI ServiceMain(DWORD argc, LPTSTR *argv) {
   PSECURITY_LOGON_SESSION_DATA sessionData = NULL;
 
 	enableDEP();
 
-	log = new LogFile("C:\\RemoteLog.txt");
+	loggingFile = new LogFile("C:\\RemoteLog.txt");
 
   m_ServiceStatus.dwServiceType = SERVICE_WIN32;
   m_ServiceStatus.dwCurrentState = SERVICE_START_PENDING;
@@ -41,7 +41,7 @@ void WINAPI ServiceMain(DWORD argc, LPTSTR *argv) {
   }
 
 	ServiceQuit();	
-	delete log;
+	delete loggingFile;
 
   return;
 }

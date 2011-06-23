@@ -1,21 +1,26 @@
 #include "LogFile.h"
 
-LogFile::LogFile(const char *sFileName) {
+LogFile::LogFile(const char *sFileName)
+{
 	file = new HandleFile(sFileName,HandleFile::AllowRead,HandleFile::ReadWrite,HandleFile::OpenAlways,false);
+  newTmpEntry();
 }
 
-LogFile::~LogFile(void) {
+LogFile::~LogFile(void)
+{
 	if (file)
 		delete file;
 }
 
-void LogFile::writeEntry(int iEntry, bool insertTime) {
+void LogFile::writeEntry(int iEntry, bool insertTime)
+{
 	char sBuffer[42];
 	itoa(iEntry,sBuffer,10);
 	writeEntry(sBuffer,insertTime);
 }
 
-void LogFile::writeEntry(const char *sEntry, bool insertTime) {
+void LogFile::writeEntry(const char *sEntry, bool insertTime)
+{
   time_t cTime;
   struct tm *strTime;
   char sBuffer[100];
@@ -32,4 +37,20 @@ void LogFile::writeEntry(const char *sEntry, bool insertTime) {
 	file->appendData(sEntry,strlen(sEntry));
 	file->appendData("\n",1);
 	file->flushData();
+}
+
+void LogFile::newTmpEntry()
+{
+  tmp_entry = "";
+}
+
+void LogFile::addTmpEntry(const char *sEntry)
+{
+  tmp_entry += sEntry;
+}
+
+void LogFile::writeTmpEntry(bool insertTime)
+{
+  writeEntry(tmp_entry.c_str(),insertTime);
+  newTmpEntry();
 }

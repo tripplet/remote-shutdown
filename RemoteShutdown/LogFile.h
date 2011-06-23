@@ -2,14 +2,14 @@
 
 #include <time.h>
 #include <cstdlib>
+#include <string>
 
 #include "HandleFile.h"
 
-using namespace std;
-
 class LogFile {
 	private:
-		HandleFile *file;
+    HandleFile *file;
+    std::string tmp_entry;
 
 	public:
 		LogFile(const char *sFileName);
@@ -17,4 +17,8 @@ class LogFile {
 
 		void writeEntry(const char *sEntry, bool insertTime = true);
 		void writeEntry(int iEntry, bool insertTime = true);
+
+    void newTmpEntry();
+    void addTmpEntry(const char *sEntry);
+    void writeTmpEntry(bool insertTime = true);
 };
