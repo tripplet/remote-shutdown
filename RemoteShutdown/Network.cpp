@@ -18,7 +18,7 @@ DWORD netTCPLoop(LPVOID lpParameter) {
 	struct sockaddr_in connected_client;
 	WSADATA wsaData;
 	SOCKET connectedSocket, acceptSocket;
-	char buffer[2048];
+	char buffer[2049];
 	int client_len, rc, data_len;
 	basic_string <char>::size_type index;
 
@@ -69,7 +69,7 @@ DWORD netTCPLoop(LPVOID lpParameter) {
 
 		// recieve data
     do {
-			data_len = recv(connectedSocket, buffer, 2047, 0);
+			data_len = recv(connectedSocket, buffer, 2048, 0);
 					
 			if (data_len > 0) {
 				// terminate string
@@ -82,10 +82,9 @@ DWORD netTCPLoop(LPVOID lpParameter) {
 					string tmp = message.substr(0,index); 
 					message.clear();
 
-					int ret = MessageRecieved(tmp.c_str(),connected_client.sin_addr,TCP_MESSAGE);
-					itoa(ret,buffer,10);
+					std::string ret = MessageRecieved(tmp.c_str(),connected_client.sin_addr,TCP_MESSAGE);
 
-					send(connectedSocket,buffer,strlen(buffer),0);
+          send(connectedSocket,ret.c_str(),ret.length(),0);
 				}
 			}
     } while( data_len > 0 );

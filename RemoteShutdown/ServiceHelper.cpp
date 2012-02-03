@@ -3,7 +3,7 @@
 SERVICE_STATUS m_ServiceStatus;
 SERVICE_STATUS_HANDLE m_ServiceStatusHandle;
 
-extern bool bRunning;
+extern HANDLE g_StopEvent;
 extern LogFile *loggingFile;
 
 void WINAPI ServiceMain(DWORD argc, LPTSTR *argv) {
@@ -27,18 +27,16 @@ void WINAPI ServiceMain(DWORD argc, LPTSTR *argv) {
     return;
   }
 
+  g_StopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+
   m_ServiceStatus.dwCurrentState = SERVICE_RUNNING;
   m_ServiceStatus.dwCheckPoint = 0;
   m_ServiceStatus.dwWaitHint = 0;
   
 	if (!SetServiceStatus (m_ServiceStatusHandle, &m_ServiceStatus)) {
   }
-
-  bRunning=true;
-
-  while(bRunning) {
-		ServiceLoop();
-  }
+  
+  ServiceLoop();
 
 	ServiceQuit();	
 	delete loggingFile;
@@ -61,7 +59,7 @@ void WINAPI ServiceCtrlHandler(DWORD Opcode) {
       m_ServiceStatus.dwWaitHint = 0;
 
       SetServiceStatus (m_ServiceStatusHandle,&m_ServiceStatus);
-      bRunning=false;
+      SetEvent(g_StopEvent);
       break;
     case SERVICE_CONTROL_INTERROGATE:
       break; 

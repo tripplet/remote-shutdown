@@ -1,7 +1,7 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RemoteShutdown", "RemoteShutdown\RemoteShutdown.vcproj", "{EF9DEF4A-D2BF-4518-B0D9-3F38C1EB6BB5}"
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RemoteShutdown", "RemoteShutdown\RemoteShutdown.vcxproj", "{EF9DEF4A-D2BF-4518-B0D9-3F38C1EB6BB5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -2,11 +2,14 @@
 
 
 /** ########## Global variables ########## **/
-bool bRunning = true;
+HANDLE g_StopEvent;
 LogFile *loggingFile;
 
 HANDLE hNetTCPThread;
 HANDLE hNetUDPThread;
+
+std::string lastChallange;
+time_t lastChallangeTime;
 
 /** ########## Functions ########## **/ 
 bool EnableShutdownPrivNT();
@@ -18,7 +21,8 @@ void ServiceLoop() {
 	loggingFile->writeEntry("Service started");
 	hNetTCPThread = StartNetTCPLoopThread(INFORM_PORT);
 	hNetUDPThread = StartNetUDPLoopThread(INFORM_PORT);
-	SuspendThread(GetCurrentThread());
+	//SuspendThread(GetCurrentThread());
+  WaitForSingleObject(g_StopEvent,INFINITE);
 }
 
 void ServiceQuit() {
@@ -27,16 +31,12 @@ void ServiceQuit() {
 	TerminateThread(hNetUDPThread,0);
 }
 
-int MessageRecieved(const char* message,in_addr ip,int protocol) {
-	DWORD  bufCharCount = MAX_COMPUTERNAME_LENGTH + 1;
-	int compare;
-	char sPCName[MAX_COMPUTERNAME_LENGTH + 1];
-	char sShutdownCMD[MAX_COMPUTERNAME_LENGTH + 1 + 128];
-	char sShutdownCMDAdmin[MAX_COMPUTERNAME_LENGTH + 1 + 128];
+std::string MessageRecieved(const char* message,in_addr ip,int protocol) {
+	DWORD bufCharCount = MAX_COMPUTERNAME_LENGTH + 1;
 	char *sMessage = new char[strlen(message)+1];
 
 	if (strlen(message)==0)
-		return -10;
+		return std::string("EMPTY");
 
   loggingFile->newTmpEntry();
 	loggingFile->addTmpEntry("MessageRechived ");
@@ -49,91 +49,117 @@ int MessageRecieved(const char* message,in_addr ip,int protocol) {
 	loggingFile->addTmpEntry(message);
   loggingFile->writeTmpEntry();
 
-	if (0==GetComputerName(sPCName,&bufCharCount))
-		return -2;
-
 	strncpy(sMessage,message,strlen(message)+1);
 	strlwr(sMessage);
+  
 
-	strcpy(sShutdownCMD,"shutdown ");
-	strcat(sShutdownCMD,sPCName);
-	strlwr(sShutdownCMD);
+  // challange request
+  if (0 == strcmpi(sMessage,"request_shutdown")) {	
+    lastChallange = CChallengeResponse::createChallange();
+    lastChallangeTime = time(NULL);
+    return lastChallange;
+  }
+  
+  // shutdown
+  if (0 == strnicmp(sMessage,"shutdown",8)) {
+    std::string ret;
 
-	strcpy(sShutdownCMDAdmin,"shutdown_admin ");
-	strcat(sShutdownCMDAdmin,sPCName);
-	strlwr(sShutdownCMDAdmin);
+    if (!lastChallange.empty() && CChallengeResponse::verifyResponse(lastChallange,std::string(SECRET_SHUTDOWN),std::string(sMessage+9))) {
+     
+      if (difftime(time(NULL),lastChallangeTime)<=RESPONSE_LIMIT) {
+        delete[] sMessage;
 
-	compare = strcmpi(sMessage,sShutdownCMD);
+        loggingFile->newTmpEntry();
+		    loggingFile->addTmpEntry("Shutdown command recognized");
 
-	// normal shutdown command
-	if (compare==0) {	
-		delete[] sMessage;
+		    if (isUserLoggedOn()) {
+			    loggingFile->addTmpEntry(" -> User logged in -> ABORT\n");
+          loggingFile->writeTmpEntry();
+			    return std::string("USER_LOGGEDIN");
+		    }
 
-    loggingFile->newTmpEntry();
-		loggingFile->addTmpEntry("Shutdown command recognized");
-
-		if (isUserLoggedOn()) {
-			loggingFile->addTmpEntry(" -> User logged in -> ABORT\n");
-      loggingFile->writeTmpEntry();
-			return -1;
-		}
-
-		if (isRemoteUserLoggedIn()) {
-			loggingFile->addTmpEntry(" -> RemoteUser logged in -> ABORT\n");
-      loggingFile->writeTmpEntry();
-			return -1;
-		}		
+		    if (isRemoteUserLoggedIn()) {
+			    loggingFile->addTmpEntry(" -> RemoteUser logged in -> ABORT\n");
+          loggingFile->writeTmpEntry();
+			    return std::string("USER_LOGGEDIN");
+		    }		
 		
-		loggingFile->writeEntry(" -> User not logged in");
+		    loggingFile->writeEntry(" -> User not logged in");
 
-		// get shutdown priv
-		if (!EnableShutdownPrivNT()) {	
-			loggingFile->addTmpEntry(" -> Failed to achieve ShutdownPriv -> ABORT\n");
-      loggingFile->writeTmpEntry();
-			return -3;
-		}
+		    // get shutdown priv
+		    if (!EnableShutdownPrivNT()) {	
+			    loggingFile->addTmpEntry(" -> Failed to achieve ShutdownPriv -> ABORT\n");
+          loggingFile->writeTmpEntry();
+			    return std::string("FAILED");
+		    }
 
-		loggingFile->addTmpEntry(" -> ShutdownPriv achieved");
+		    loggingFile->addTmpEntry(" -> ShutdownPriv achieved");
 
-		// Shutdown pc
-		ExitWindowsEx(EWX_POWEROFF | EWX_FORCEIFHUNG,0);
-		loggingFile->addTmpEntry(" -> Shutdown performed");
-    loggingFile->writeTmpEntry();
-		return 1;
+		    // Shutdown pc
+		    ExitWindowsEx(EWX_POWEROFF | EWX_FORCEIFHUNG,0);
+		    loggingFile->addTmpEntry(" -> Shutdown performed");
+        loggingFile->writeTmpEntry();
+		    return std::string("1");
+      }
+      else {
+        ret = std::string("SLOW");
+      }
+    }
+    else {
+      ret = std::string("INVALID");
+    }
+
+    lastChallange.clear();
+    return ret;
+  }
+
+
+	if (0 == strnicmp(sMessage,"admin_shutdown",14)) {	
+		std::string ret;
+
+    if (!lastChallange.empty() && CChallengeResponse::verifyResponse(lastChallange,std::string(SECRET_SHUTDOWN),std::string(sMessage+15))) {
+     
+      if (difftime(time(NULL),lastChallangeTime)<=RESPONSE_LIMIT) {
+        delete[] sMessage;
+
+        loggingFile->newTmpEntry();
+		    loggingFile->addTmpEntry("Admin Shutdown command recognized");
+
+		    if (isUserLoggedOn())
+			    loggingFile->addTmpEntry(" -> User logged in");
+		    else if (isRemoteUserLoggedIn())
+			    loggingFile->addTmpEntry(" -> RemoteUser logged in");
+		    else
+			    loggingFile->addTmpEntry(" -> User not logged on");
+
+		    // get shutdown priv
+		    if (!EnableShutdownPrivNT()) {	
+			    loggingFile->addTmpEntry(" -> Failed to achieve ShutdownPriv -> ABORT\n");
+          loggingFile->writeTmpEntry();
+			    return std::string("FAILED");
+		    }
+
+		    loggingFile->addTmpEntry(" -> ShutdownPriv achieved");
+
+		    // Shutdown pc
+		    ExitWindowsEx(EWX_POWEROFF | EWX_FORCEIFHUNG,0);
+		    loggingFile->writeEntry(" -> AdminShutdown performed\n");
+        loggingFile->writeTmpEntry();
+		    return std::string("1");
+      }
+      else {
+        ret = std::string("SLOW");
+      }
+    }
+    else {
+      ret = std::string("INVALID");
+    }
+
+    lastChallange.clear();
+    return ret;
 	}
-
-	compare = strcmpi(sMessage,sShutdownCMDAdmin);
-
-	if (compare==0) {	
-		delete[] sMessage;
-
-    loggingFile->newTmpEntry();
-		loggingFile->addTmpEntry("Admin Shutdown command recognized");
-
-		if (isUserLoggedOn())
-			loggingFile->addTmpEntry(" -> User logged in");
-		else if (isRemoteUserLoggedIn())
-			loggingFile->addTmpEntry(" -> RemoteUser logged in");
-		else
-			loggingFile->addTmpEntry(" -> User not logged on");
-
-		// get shutdown priv
-		if (!EnableShutdownPrivNT()) {	
-			loggingFile->addTmpEntry(" -> Failed to achieve ShutdownPriv -> ABORT\n");
-      loggingFile->writeTmpEntry();
-			return -3;
-		}
-
-		loggingFile->addTmpEntry(" -> ShutdownPriv achieved");
-
-		// Shutdown pc
-		ExitWindowsEx(EWX_POWEROFF | EWX_FORCEIFHUNG,0);
-		loggingFile->writeEntry(" -> AdminShutdown performed\n");
-    loggingFile->writeTmpEntry();
-		return 1;
-	}
-	
-	return -4;
+  
+	return std::string("NOT_RECOGNIZED");
 }
 
 int main(int argc, char* argv[]) {
@@ -186,8 +212,7 @@ bool isUserLoggedOn() {
 
   // Get the user of the "active" session
   DWORD dwSessionId = WTSGetActiveConsoleSessionId();
-
-
+  
   if (0xFFFFFFFF == dwSessionId) {
     // there is no active session
     return false;
@@ -219,7 +244,7 @@ bool isUserLoggedOn() {
   CloseHandle(hDupToken);
   CloseHandle(hToken);
 
-	return false;
+  return false;
 }
 
 

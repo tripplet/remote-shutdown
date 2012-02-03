@@ -9,7 +9,8 @@
 #include "GlobalConst.h"
 #include "Network.h"
 #include "ServiceHelper.h"
+#include "ChallengeResponse.h"
 
 using namespace std;
 
-int MessageRecieved(const char* message,in_addr ip,int protocol);
+std::string MessageRecieved(const char* message,in_addr ip,int protocol);
