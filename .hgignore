@@ -10,3 +10,6 @@ Debug/*
 *.ilk
 *.aps
 *.suo
+ipch/*
+*.sdf
+*.vcxproj.user
