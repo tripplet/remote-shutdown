@@ -31,8 +31,18 @@ char *CChallengeResponse::generateRandom(unsigned int len)
   char *pReturn;
 
   // Acquire a cryptographic provider context handle
-  if(!CryptAcquireContext(&hCryptProv,  NULL, NULL, PROV_RSA_FULL, 0)) 
-    return NULL;
+  if(!CryptAcquireContext(&hCryptProv,  NULL, NULL, PROV_RSA_FULL, 0)) {
+    
+    // try to catch error
+    if (GetLastError() == NTE_BAD_KEYSET) {
+      if(!CryptAcquireContext(&hCryptProv,  NULL, NULL, PROV_RSA_FULL, CRYPT_NEWKEYSET)) {
+        return NULL;
+      }
+    }
+    else {
+      return NULL;
+    }
+  }
 
   // Generate the random number
   if(!CryptGenRandom(hCryptProv, len, (unsigned char*) pRandom))

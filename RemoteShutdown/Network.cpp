@@ -23,7 +23,7 @@ DWORD netTCPLoop(LPVOID lpParameter) {
 	basic_string <char>::size_type index;
 
 	client_len = sizeof(connected_client);
-
+  
 	// Initialisiere TCP für Windows (winsock)
 	if (WSAStartup (MAKEWORD( 2, 2 ), &wsaData) != 0) {
 			return 1;

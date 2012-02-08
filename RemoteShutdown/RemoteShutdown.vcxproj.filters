@@ -22,6 +22,9 @@
     <Filter Include="Quelldateien\ChallengeRespond">
       <UniqueIdentifier>{22e0fa16-f745-4561-ae6b-9a5f3e08b828}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Quelldateien\ProtectedStorage">
+      <UniqueIdentifier>{1cf9967a-6693-41d7-9981-11d19838daa6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Network.cpp">
@@ -44,6 +47,12 @@
     </ClCompile>
     <ClCompile Include="ChallengeResponse.cpp">
       <Filter>Quelldateien\ChallengeRespond</Filter>
+    </ClCompile>
+    <ClCompile Include="ProtectedStorage.cpp">
+      <Filter>Quelldateien\ProtectedStorage</Filter>
+    </ClCompile>
+    <ClCompile Include="RegHelper.cpp">
+      <Filter>Quelldateien\ProtectedStorage</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -73,6 +82,12 @@
     </ClInclude>
     <ClInclude Include="ChallengeResponse.h">
       <Filter>Quelldateien\ChallengeRespond</Filter>
+    </ClInclude>
+    <ClInclude Include="ProtectedStorage.h">
+      <Filter>Quelldateien\ProtectedStorage</Filter>
+    </ClInclude>
+    <ClInclude Include="RegHelper.h">
+      <Filter>Quelldateien\ProtectedStorage</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

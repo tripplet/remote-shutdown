@@ -10,6 +10,7 @@
 #include "Network.h"
 #include "ServiceHelper.h"
 #include "ChallengeResponse.h"
+#include "ProtectedStorage.h"
 
 using namespace std;
 

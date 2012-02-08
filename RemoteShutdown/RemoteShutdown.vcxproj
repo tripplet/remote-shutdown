@@ -93,6 +93,8 @@
   <ItemGroup>
     <ClCompile Include="ChallengeResponse.cpp" />
     <ClCompile Include="Network.cpp" />
+    <ClCompile Include="ProtectedStorage.cpp" />
+    <ClCompile Include="RegHelper.cpp" />
     <ClCompile Include="RemoteShutdown.cpp" />
     <ClCompile Include="ServiceHelper.cpp" />
     <ClCompile Include="LogFile.cpp" />
@@ -105,6 +107,8 @@
     <ClInclude Include="HandleFile.h" />
     <ClInclude Include="GlobalConst.h" />
     <ClInclude Include="Network.h" />
+    <ClInclude Include="ProtectedStorage.h" />
+    <ClInclude Include="RegHelper.h" />
     <ClInclude Include="RemoteShutdown.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="ServiceHelper.h" />
