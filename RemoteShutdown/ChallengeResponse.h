@@ -1,12 +1,9 @@
 #pragma once
-#pragma comment(lib, "crypt32.lib")
 #define RANDOM_LEN 256
 
 #include <string>
 #include <windows.h>
-#include <wincrypt.h>
-
-#include "sha2.h"
+#include <memory>
 
 class CChallengeResponse
 {

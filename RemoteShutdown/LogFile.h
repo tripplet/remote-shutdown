@@ -20,5 +20,6 @@ class LogFile {
 
     void newTmpEntry();
     void addTmpEntry(const char *sEntry);
+    void addTmpEntry(const char *sEntry, unsigned int length);
     void writeTmpEntry(bool insertTime = true);
 };

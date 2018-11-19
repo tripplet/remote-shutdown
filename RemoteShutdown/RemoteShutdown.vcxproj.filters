@@ -42,9 +42,6 @@
     <ClCompile Include="HandleFile.cpp">
       <Filter>Quelldateien\LogFile\HandleFile</Filter>
     </ClCompile>
-    <ClCompile Include="sha2.cpp">
-      <Filter>Quelldateien\ChallengeRespond</Filter>
-    </ClCompile>
     <ClCompile Include="ChallengeResponse.cpp">
       <Filter>Quelldateien\ChallengeRespond</Filter>
     </ClCompile>
@@ -53,6 +50,9 @@
     </ClCompile>
     <ClCompile Include="RegHelper.cpp">
       <Filter>Quelldateien\ProtectedStorage</Filter>
+    </ClCompile>
+    <ClCompile Include="sha256.cpp">
+      <Filter>Quelldateien\ChallengeRespond</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -77,9 +77,6 @@
     <ClInclude Include="ServiceHelper.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="sha2.h">
-      <Filter>Quelldateien\ChallengeRespond</Filter>
-    </ClInclude>
     <ClInclude Include="ChallengeResponse.h">
       <Filter>Quelldateien\ChallengeRespond</Filter>
     </ClInclude>
@@ -88,6 +85,9 @@
     </ClInclude>
     <ClInclude Include="RegHelper.h">
       <Filter>Quelldateien\ProtectedStorage</Filter>
+    </ClInclude>
+    <ClInclude Include="sha256.h">
+      <Filter>Quelldateien\ChallengeRespond</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
