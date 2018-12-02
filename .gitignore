@@ -1,0 +1,19 @@
+
+# Build artifacts
+RemoteShutdown/Release/*
+RemoteShutdown/Debug/*
+RemoteShutdown/x64/*
+Release/*
+Debug/*
+x64/*
+.vs/*
+
+*.pdb
+*.ncb
+*.ilk
+*.aps
+*.suo
+*.sdf
+*.vcxproj.user
+
+Thumbs.db

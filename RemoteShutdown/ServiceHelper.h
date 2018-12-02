@@ -4,14 +4,14 @@
 #include <winsvc.h>
 
 #include "GlobalConst.h"
-#include "LogFile.h"
 
 /** ########## Functions ########## **/ 
 void WINAPI ServiceMain(DWORD argc, LPTSTR *argv);
 void WINAPI ServiceCtrlHandler(DWORD Opcode);
-bool enableDEP();
-BOOL InstallService();
-BOOL DeleteService();
+
+bool InstallCorrespondingService();
+bool StartCorrespondingService();
+bool DeleteCorrespondingService();
 
 // Implement in Mmin class
 void ServiceLoop();

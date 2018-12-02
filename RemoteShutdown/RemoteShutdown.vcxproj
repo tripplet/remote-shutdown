@@ -92,7 +92,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
@@ -112,7 +112,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
@@ -129,7 +129,7 @@
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>
       </PrecompiledHeader>
@@ -150,7 +150,7 @@
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>
       </PrecompiledHeader>
@@ -166,20 +166,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ChallengeResponse.cpp" />
-    <ClCompile Include="sha256.cpp" />
-    <ClCompile Include="Network.cpp" />
-    <ClCompile Include="ProtectedStorage.cpp" />
-    <ClCompile Include="RegHelper.cpp" />
-    <ClCompile Include="RemoteShutdown.cpp" />
-    <ClCompile Include="ServiceHelper.cpp" />
-    <ClCompile Include="LogFile.cpp" />
-    <ClCompile Include="HandleFile.cpp" />
+    <ClCompile Include="ChallengeResponse.cc" />
+    <ClCompile Include="Sha256.cc" />
+    <ClCompile Include="Network.cc" />
+    <ClCompile Include="ProtectedStorage.cc" />
+    <ClCompile Include="RegHelper.cc" />
+    <ClCompile Include="RemoteShutdown.cc" />
+    <ClCompile Include="ServiceHelper.cc" />
+    <ClCompile Include="Logger.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChallengeResponse.h" />
-    <ClInclude Include="LogFile.h" />
-    <ClInclude Include="HandleFile.h" />
+    <ClInclude Include="Logger.h" />
     <ClInclude Include="GlobalConst.h" />
     <ClInclude Include="Network.h" />
     <ClInclude Include="ProtectedStorage.h" />
@@ -187,7 +185,7 @@
     <ClInclude Include="RemoteShutdown.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="ServiceHelper.h" />
-    <ClInclude Include="sha256.h" />
+    <ClInclude Include="Sha256.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="RemoteShutdown.rc" />

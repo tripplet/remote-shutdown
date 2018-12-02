@@ -14,18 +14,18 @@
 class ProtectedStorage
 {
 private:
-	DATA_BLOB* encrypt(std::string &data);
-	std::string decrypt(DATA_BLOB &data);
+	DATA_BLOB* encrypt(std::string const &data);
+	std::string decrypt(DATA_BLOB const &data);
 
 	std::string subkey;
 	DATA_BLOB *entropy;
 
 public:
-	ProtectedStorage(std::string &storageName);
-	ProtectedStorage(std::string &storageName, std::string &entropy);
+	ProtectedStorage(std::string const &storageName);
+	ProtectedStorage(std::string const &storageName, std::string const &entropy);
 	~ProtectedStorage();
 
-	bool save(std::string &key, std::string &data);
-	std::string read(std::string &key);
+	bool save(std::string const &key, std::string const &data);
+	std::string read(std::string const &key);
 };
 

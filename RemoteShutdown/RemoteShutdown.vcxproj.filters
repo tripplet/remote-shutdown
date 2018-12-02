@@ -1,98 +1,91 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Quelldateien">
+    <Filter Include="src">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Quelldateien\LogFile">
-      <UniqueIdentifier>{fcdf4c86-1f0a-4f40-ac64-784a370c1632}</UniqueIdentifier>
+    <Filter Include="src\ProtectedStorage">
+      <UniqueIdentifier>{1cf9967a-6693-41d7-9981-11d19838daa6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Quelldateien\LogFile\HandleFile">
-      <UniqueIdentifier>{eda379ca-80ce-4d6c-8376-ac5202168e3f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Headerdateien">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
-    <Filter Include="Ressourcendateien">
+    <Filter Include="res">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
-    <Filter Include="Quelldateien\ChallengeRespond">
+    <Filter Include="src\Network">
+      <UniqueIdentifier>{4ee59dee-bea7-418b-9fd0-31cb6f75d352}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ServiceHelper">
+      <UniqueIdentifier>{97f5cd1b-2332-4126-b435-60e02389d7e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Logging">
+      <UniqueIdentifier>{fcdf4c86-1f0a-4f40-ac64-784a370c1632}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ChallengeResponse">
       <UniqueIdentifier>{22e0fa16-f745-4561-ae6b-9a5f3e08b828}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Quelldateien\ProtectedStorage">
-      <UniqueIdentifier>{1cf9967a-6693-41d7-9981-11d19838daa6}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Network.cpp">
-      <Filter>Quelldateien</Filter>
+    <ClCompile Include="Sha256.cc">
+      <Filter>src\ChallengeResponse</Filter>
     </ClCompile>
-    <ClCompile Include="RemoteShutdown.cpp">
-      <Filter>Quelldateien</Filter>
+    <ClCompile Include="ChallengeResponse.cc">
+      <Filter>src\ChallengeResponse</Filter>
     </ClCompile>
-    <ClCompile Include="ServiceHelper.cpp">
-      <Filter>Quelldateien</Filter>
+    <ClCompile Include="RegHelper.cc">
+      <Filter>src\ProtectedStorage</Filter>
     </ClCompile>
-    <ClCompile Include="LogFile.cpp">
-      <Filter>Quelldateien\LogFile</Filter>
+    <ClCompile Include="ProtectedStorage.cc">
+      <Filter>src\ProtectedStorage</Filter>
     </ClCompile>
-    <ClCompile Include="HandleFile.cpp">
-      <Filter>Quelldateien\LogFile\HandleFile</Filter>
+    <ClCompile Include="RemoteShutdown.cc">
+      <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="ChallengeResponse.cpp">
-      <Filter>Quelldateien\ChallengeRespond</Filter>
+    <ClCompile Include="Network.cc">
+      <Filter>src\Network</Filter>
     </ClCompile>
-    <ClCompile Include="ProtectedStorage.cpp">
-      <Filter>Quelldateien\ProtectedStorage</Filter>
+    <ClCompile Include="ServiceHelper.cc">
+      <Filter>src\ServiceHelper</Filter>
     </ClCompile>
-    <ClCompile Include="RegHelper.cpp">
-      <Filter>Quelldateien\ProtectedStorage</Filter>
-    </ClCompile>
-    <ClCompile Include="sha256.cpp">
-      <Filter>Quelldateien\ChallengeRespond</Filter>
+    <ClCompile Include="Logger.cc">
+      <Filter>src\Logging</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="LogFile.h">
-      <Filter>Quelldateien\LogFile</Filter>
-    </ClInclude>
-    <ClInclude Include="HandleFile.h">
-      <Filter>Quelldateien\LogFile\HandleFile</Filter>
-    </ClInclude>
-    <ClInclude Include="GlobalConst.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
-    <ClInclude Include="Network.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
-    <ClInclude Include="RemoteShutdown.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
-    <ClInclude Include="ServiceHelper.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
     <ClInclude Include="ChallengeResponse.h">
-      <Filter>Quelldateien\ChallengeRespond</Filter>
+      <Filter>src\ChallengeResponse</Filter>
     </ClInclude>
     <ClInclude Include="ProtectedStorage.h">
-      <Filter>Quelldateien\ProtectedStorage</Filter>
+      <Filter>src\ProtectedStorage</Filter>
     </ClInclude>
     <ClInclude Include="RegHelper.h">
-      <Filter>Quelldateien\ProtectedStorage</Filter>
+      <Filter>src\ProtectedStorage</Filter>
     </ClInclude>
-    <ClInclude Include="sha256.h">
-      <Filter>Quelldateien\ChallengeRespond</Filter>
+    <ClInclude Include="Sha256.h">
+      <Filter>src\ChallengeResponse</Filter>
+    </ClInclude>
+    <ClInclude Include="Network.h">
+      <Filter>src\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="ServiceHelper.h">
+      <Filter>src\ServiceHelper</Filter>
+    </ClInclude>
+    <ClInclude Include="RemoteShutdown.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="GlobalConst.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>res</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger.h">
+      <Filter>src\Logging</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="RemoteShutdown.rc">
-      <Filter>Ressourcendateien</Filter>
+      <Filter>res</Filter>
     </ResourceCompile>
   </ItemGroup>
 </Project>

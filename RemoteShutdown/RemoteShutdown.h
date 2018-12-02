@@ -13,6 +13,7 @@
 #include "ChallengeResponse.h"
 #include "ProtectedStorage.h"
 #include "sha256.h"
+#include "Logger.h"
 
 using namespace std;
 

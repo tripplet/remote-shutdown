@@ -6,18 +6,16 @@
 #include <vector>
 #include <memory>
 
-class sha256
+namespace sha256
 {
-public:
-	static std::shared_ptr<std::vector<byte>> sha256::Hash(std::string const &message);
-	static std::shared_ptr<std::vector<byte>> sha256::Hash(std::vector<byte> const &message);
+	std::shared_ptr<std::vector<byte>> Hash(std::string const &message);
+	std::shared_ptr<std::vector<byte>> Hash(std::vector<byte> const &message);
 
-	static std::shared_ptr<std::vector<byte>> sha256::HashHMAC(std::vector<byte> const &key, std::vector<byte> const &message);
-	static std::shared_ptr<std::vector<byte>> sha256::HashHMAC(std::string const &key, std::string const &message);
+	std::shared_ptr<std::vector<byte>> HashHMAC(std::vector<byte> const &key, std::vector<byte> const &message);
+	std::shared_ptr<std::vector<byte>> HashHMAC(std::string const &key, std::string const &message);
 
-	static std::string sha256::ToHex(std::vector<byte> const &data);
+	std::string ToHex(std::vector<byte> const &data);
 
-private:
-	static bool constant_time_compare(const void *a, const void *b, const size_t size);
+	bool constant_time_compare(const void *a, const void *b, const size_t size);
 };
 
