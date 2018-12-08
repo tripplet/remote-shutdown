@@ -15,6 +15,4 @@
 #include "sha256.h"
 #include "Logger.h"
 
-using namespace std;
-
 std::string MessageRecieved(const char* message, in_addr ip);

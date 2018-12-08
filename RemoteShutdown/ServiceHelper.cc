@@ -79,7 +79,7 @@ const std::string GetExecutablePath()
 	char executableFilePath[65536];
 
 	auto const hModule = GetModuleHandle(nullptr);
-	auto const filePathLength = GetModuleFileName(hModule, executableFilePath, 65536);;
+	auto const filePathLength = GetModuleFileName(hModule, executableFilePath, 65536);
 
 	if (filePathLength > 0 && filePathLength < 65536)
 	{
@@ -89,18 +89,18 @@ const std::string GetExecutablePath()
 	return nullptr;
 }
 
-BOOL InstallCorrespondingService()
+bool InstallCorrespondingService()
 {
 	bool result = false;
 	SC_HANDLE scManager = nullptr, serviceHandle = nullptr;
-	
+
 	try
 	{
 		auto strPath = GetExecutablePath();
 
 		scManager = OpenSCManager(nullptr, nullptr, SC_MANAGER_ALL_ACCESS);
-		if (scManager == nullptr) { throw; }	
-	
+		if (scManager == nullptr) { throw 0; }
+
 		serviceHandle = CreateService(scManager,
 			PROG_NAME, // service name
 			PROG_NAME, // service name to display
@@ -117,7 +117,7 @@ BOOL InstallCorrespondingService()
 
 		if (serviceHandle == nullptr)
 		{
-			throw;
+			throw 0;
 		}
 
 		SERVICE_DESCRIPTION sd;
@@ -126,7 +126,7 @@ BOOL InstallCorrespondingService()
 		ChangeServiceConfig2(serviceHandle, SERVICE_CONFIG_DESCRIPTION, &sd);
 		result = true;
 	}
-	catch (const std::exception)
+	catch (...)
 	{
 	}
 
@@ -140,32 +140,37 @@ BOOL InstallCorrespondingService()
 bool DeleteCorrespondingService()
 {
 	bool result = false;
+    SERVICE_STATUS status;
 	SC_HANDLE scManager = nullptr, serviceHandle = nullptr;
 
 	try
 	{
 		scManager = OpenSCManager(nullptr, nullptr, SC_MANAGER_ALL_ACCESS);
-		if (scManager == nullptr) { throw; }
+		if (scManager == nullptr) { throw 0; }
 
 		serviceHandle = OpenService(scManager, PROG_NAME, SERVICE_ALL_ACCESS);
-		if (serviceHandle == nullptr) { throw; }
+		if (serviceHandle == nullptr) { throw 0; }
+
 
 		if (!DeleteService(serviceHandle))
 		{
-			throw;
+			throw 0;
 		}
 		else
 		{
 			result = true;
 		}
+
+        // Stop the service
+        ControlService(serviceHandle, SERVICE_CONTROL_STOP, (LPSERVICE_STATUS)&status);
 	}
-	catch (const std::exception)
+	catch (...)
 	{
 	}
 
 	// Cleanup
 	if (serviceHandle != nullptr) { CloseServiceHandle(serviceHandle); }
-	if (scManager != nullptr) { CloseServiceHandle(scManager); }	
+	if (scManager != nullptr) { CloseServiceHandle(scManager); }
 
 	return result;
 }
@@ -178,21 +183,21 @@ bool StartCorrespondingService()
 	try
 	{
 		scManager = OpenSCManager(nullptr, nullptr, SC_MANAGER_ALL_ACCESS);
-		if (scManager == nullptr) { throw; }
+		if (scManager == nullptr) { throw 0; }
 
 		serviceHandle = OpenService(scManager, PROG_NAME, SERVICE_ALL_ACCESS);
-		if (serviceHandle == nullptr) { throw; }
+		if (serviceHandle == nullptr) { throw 0; }
 
 		if (!StartService(serviceHandle, 0, nullptr))
 		{
-			throw;
+			throw 0;
 		}
 		else
 		{
 			result = true;
 		}
 	}
-	catch (const std::exception)
+	catch (...)
 	{
 	}
 

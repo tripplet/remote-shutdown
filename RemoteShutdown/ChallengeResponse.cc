@@ -4,14 +4,14 @@
 
 std::string CChallengeResponse::createChallange()
 {
-	std::unique_ptr<char> random(generateRandom(RANDOM_LEN));
+    std::unique_ptr<char> random(generateRandom(RANDOM_LEN));
 
-	if (!random.get())
-	{
-		return std::string("");
-	}
+    if (!random.get())
+    {
+        return "";
+    }
 
-	return sha256::ToHex(*sha256::Hash(std::vector<byte>(random.get(), random.get() + RANDOM_LEN)));
+    return sha256::ToHex(*sha256::Hash(std::vector<byte>(random.get(), random.get() + RANDOM_LEN)));
 }
 
 bool CChallengeResponse::verifyResponse(std::string &challange, std::string &secret, std::string &response)

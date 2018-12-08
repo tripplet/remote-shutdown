@@ -1,6 +1,5 @@
 #include "RemoteShutdown.h"
 
-/** ########## Global variables ########## **/
 HANDLE g_StopEvent;
 Logger logger(PROG_NAME);
 
@@ -17,6 +16,8 @@ bool isUserLoggedOn();
 bool isRemoteUserLoggedIn();
 DWORD RxPipe(LPVOID lpParameter);
 
+#include <iostream>
+
 
 void ServiceLoop()
 {
@@ -28,9 +29,9 @@ void ServiceLoop()
     {
         return;
     }
-    
+
     hRxPipeThread = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)RxPipe, nullptr, 0, nullptr);
-    hNetTCPThread = StartNetTCPLoopThread(INFORM_PORT);
+    hNetTCPThread = StartNetTCPLoopThread(DEFAULT_PORT);
 
     // Wait for stop event
     WaitForSingleObject(g_StopEvent, INFINITE);
@@ -458,29 +459,29 @@ int main(int argc, char **argv)
     {
         if (strcmp(argv[1], "-i") == 0)
         {
-            if (InstallService())
+            if (InstallCorrespondingService())
             {
-                printf("\n\nService sucessfully installed\nSpecify secret with \"" PROG_NAME " -s SECRET\"\n");
+                std::cout << "Service sucessfully installed" << std::endl << "Specify secret with \"" PROG_NAME " -s SECRET\"";
             }
             else
             {
-                printf("\n\nError installing service\n");
+                std::cout << "Error installing service: Try running as administrator";
             }
         }
         else if (strcmp(argv[1], "-d") == 0)
         {
-            if (DeleteService())
+            if (DeleteCorrespondingService())
             {
-                printf("\n\nService sucessfully uninstalled\n");
+                std::cout << "Service sucessfully uninstalled";
             }
             else
             {
-                printf("\n\nError uninstalling service\n");
+                std::cout << "Error uninstalling service";
             }
         }
         else if (strcmp(argv[1], "--debug") == 0)
         {
-            printf("\n\nDebug running\n");
+            std::cout << "Debug running";
 
             auto hash = sha256::ToHex(*sha256::HashHMAC(std::string("test"), std::string("abcdef")));
             auto secret = CChallengeResponse::createChallange();
@@ -495,12 +496,12 @@ int main(int argc, char **argv)
             }
             else
             {
-                printf("Specify secret with \"" PROG_NAME " -s SECRET\"\n");
+                std::cout << "Specify secret with \"" PROG_NAME " -s SECRET\"";
             }
         }
         else
         {
-            printf("\n\nUnknown switch usage\n\nFor install use \"" PROG_NAME " -i\"\nFor uninstall use \"" PROG_NAME " -d\"\nSpecify secret with \"" PROG_NAME " -s SECRET\"\n");
+            std::cout << "Unknown switch usage\n\nFor install use \"" PROG_NAME " -i\"\nFor uninstall use \"" PROG_NAME " -d\"\nSpecify secret with \"" PROG_NAME " -s SECRET\"";
         }
     }
     else
@@ -512,7 +513,8 @@ int main(int argc, char **argv)
     return 0;
 }
 
-bool isRemoteUserLoggedIn() {
+bool isRemoteUserLoggedIn()
+{
     PWTS_SESSION_INFO ppSessionInfo = nullptr;
     DWORD pCount;
 
@@ -523,9 +525,12 @@ bool isRemoteUserLoggedIn() {
         return false;
     }
 
-    for (DWORD idx = 0; idx < pCount; idx++) {
+    for (DWORD idx = 0; idx < pCount; idx++)
+    {
         if (ppSessionInfo[idx].State == WTSActive)
+        {
             return true;
+        }
     }
 
     return false;

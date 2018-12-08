@@ -6,9 +6,9 @@ class Logger
 {
 private:
 	HANDLE eventSource = nullptr;
-		    
+
 public:
-	Logger(const char *name);
+	explicit Logger(const char *name);
 	~Logger();
 
 	void info(const char *message);

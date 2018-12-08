@@ -5,7 +5,6 @@
 
 #include "GlobalConst.h"
 
-/** ########## Functions ########## **/ 
 void WINAPI ServiceMain(DWORD argc, LPTSTR *argv);
 void WINAPI ServiceCtrlHandler(DWORD Opcode);
 

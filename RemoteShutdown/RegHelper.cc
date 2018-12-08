@@ -1,158 +1,161 @@
 #include "RegHelper.h"
 
-bool p_SetRegKeyValue(HKEY hMainKey, const char *subKey, const char *keyName, DWORD dwType, const BYTE *value, int size)
+namespace registry
 {
-	HKEY hKey;
-	if (RegCreateKeyEx(hMainKey, subKey, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
-	{
-		return false;
-	}
+    bool p_SetKeyValue(HKEY mainKey, const std::string &subKey, const std::string &keyName, DWORD dwType, const byte *value, unsigned long size)
+    {
+        HKEY hKey;
+        if (RegCreateKeyEx(mainKey, subKey.c_str(), 0U, nullptr, 0U, KEY_WRITE, nullptr, &hKey, nullptr) != ERROR_SUCCESS)
+        {
+            return false;
+        }
 
-	if (RegSetValueEx(hKey, keyName, 0, dwType, value, size) != ERROR_SUCCESS)
-	{
-		return false;
-	}
+        if (RegSetValueEx(hKey, keyName.c_str(), 0U, dwType, value, size) != ERROR_SUCCESS)
+        {
+            return false;
+        }
 
-	RegCloseKey(hKey);
-	return true;
-}
+        RegCloseKey(hKey);
+        return true;
+    }
 
-DWORD p_GetRegKeySize(HKEY hMainKey, const char *subKey, const char *keyName)
-{
-	HKEY hKey;
-	DWORD dDataSize;
-	if (RegCreateKeyEx(hMainKey, subKey, 0, NULL, 0, KEY_QUERY_VALUE, NULL, &hKey, NULL) != ERROR_SUCCESS)
-	{
-		return 0;
-	}
+    DWORD p_GetKeySize(HKEY mainKey, const std::string &subKey, const std::string &keyName)
+    {
+        HKEY hKey;
+        DWORD dDataSize;
+        if (RegCreateKeyEx(mainKey, subKey.c_str(), 0U, nullptr, 0U, KEY_QUERY_VALUE, nullptr, &hKey, nullptr) != ERROR_SUCCESS)
+        {
+            return 0;
+        }
 
-	if (RegQueryValueEx(hKey, keyName, 0, NULL, NULL, &dDataSize) != ERROR_SUCCESS)
-	{
-		RegCloseKey(hKey);
-		return 0;
-	}
+        if (RegQueryValueEx(hKey, keyName.c_str(), 0U, nullptr, nullptr, &dDataSize) != ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            return 0;
+        }
 
-	RegCloseKey(hKey);
-	return dDataSize;
-}
+        RegCloseKey(hKey);
+        return dDataSize;
+    }
 
-bool p_GetRegKeyValue(HKEY hMainKey, const char *subKey, const char *keyName, DWORD dDataLen, BYTE *data)
-{
-	HKEY hKey;
+    bool p_GetKeyValue(HKEY mainKey, const std::string &subKey, const std::string &keyName, DWORD dDataLen, BYTE *data)
+    {
+        HKEY hKey;
 
-	if (RegCreateKeyEx(hMainKey, subKey, 0, NULL, 0, KEY_READ, NULL, &hKey, NULL) != ERROR_SUCCESS)
-	{
-		return false;
-	}
+        if (RegCreateKeyEx(mainKey, subKey.c_str(), 0U, nullptr, 0U, KEY_READ, nullptr, &hKey, nullptr) != ERROR_SUCCESS)
+        {
+            return false;
+        }
 
-	if (RegQueryValueEx(hKey, keyName, 0, NULL, data, &dDataLen) != ERROR_SUCCESS)
-	{
-		RegCloseKey(hKey);
-		return false;
-	}
+        if (RegQueryValueEx(hKey, keyName.c_str(), 0U, nullptr, data, &dDataLen) != ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            return false;
+        }
 
-	RegCloseKey(hKey);
-	return true;
-}
+        RegCloseKey(hKey);
+        return true;
+    }
 
-bool SetRegKeyValue(HKEY hMainKey, const char *subKey, const char *keyName, const char *value)
-{
-	return p_SetRegKeyValue(hMainKey, subKey, keyName, REG_SZ, (LPBYTE)value, (DWORD)strlen(value) + 1);
-}
+    bool SetKeyValue(HKEY mainKey, const std::string &subKey, const std::string &keyName, const std::string &value)
+    {
+        return p_SetKeyValue(mainKey, subKey, keyName, REG_SZ, reinterpret_cast<byte*>(const_cast<char*>(value.data())), static_cast<unsigned long>(value.length()));
+    }
 
-bool SetRegKeyValue(HKEY hMainKey, const char *subKey, const char *keyName, const int iValue)
-{
-	DWORD dValue = iValue;
-	return p_SetRegKeyValue(hMainKey, subKey, keyName, REG_DWORD, (LPBYTE)&dValue, sizeof(DWORD));
-}
+    bool SetKeyValue(HKEY mainKey, const std::string &subKey, const std::string &keyName, unsigned long value)
+    {
+        return p_SetKeyValue(mainKey, subKey, keyName, REG_DWORD, reinterpret_cast<byte*>(&value), sizeof(unsigned long));
+    }
 
-bool SetRegKeyValue(HKEY hMainKey, const char *subKey, const char *keyName, const BYTE *value, const int size)
-{
-	return p_SetRegKeyValue(hMainKey, subKey, keyName, REG_BINARY, value, size);
-}
+    bool SetKeyValue(HKEY mainKey, const std::string &subKey, const std::string &keyName, const byte *value, unsigned long size)
+    {
+        return p_SetKeyValue(mainKey, subKey, keyName, REG_BINARY, value, size);
+    }
 
-/** ############################################################## */
+    /** ############################################################## */
 
-int GetRegKeyInt(HKEY hMainKey, const char *subKey, const char *keyName, bool &success)
-{
-	DWORD dwData = 0;
+    int GetKeyInt(HKEY mainKey, const std::string &subKey, const std::string &keyName, bool &success)
+    {
+        DWORD dwData = 0;
 
-	success = p_GetRegKeyValue(hMainKey, subKey, keyName, sizeof(DWORD), (BYTE*)&dwData);
-	return (int)dwData;
-}
+        success = p_GetKeyValue(mainKey, subKey, keyName, sizeof(DWORD), reinterpret_cast<byte*>(&dwData));
+        return (int)dwData;
+    }
 
-char *GetRegKeyString(HKEY hMainKey, const char *subKey, const char *keyName, bool &success) {
-	char *sValue;
-	DWORD dDataLen = p_GetRegKeySize(hMainKey, subKey, keyName);
+    const std::string GetKeyString(HKEY mainKey, const std::string &subKey, const std::string &keyName, bool &success)
+    {
+        char *sValue;
+        DWORD dDataLen = p_GetKeySize(mainKey, subKey, keyName);
 
-	if (dDataLen == 0)
-	{
-		success = false;
-		return nullptr;
-	}
+        if (dDataLen == 0)
+        {
+            success = false;
+            return nullptr;
+        }
 
-	sValue = new char[dDataLen];
+        sValue = new char[dDataLen];
 
-	success = p_GetRegKeyValue(hMainKey, subKey, keyName, dDataLen, (BYTE*)sValue);
+        success = p_GetKeyValue(mainKey, subKey, keyName, dDataLen, reinterpret_cast<byte*>(sValue));
 
-	if (!success)
-	{
-		delete[] sValue;
-		return nullptr;
-	}
-	else
-	{
-		return sValue;
-	}
-}
+        if (!success)
+        {
+            delete[] sValue;
+            return nullptr;
+        }
+        else
+        {
+            return std::string(sValue);
+        }
+    }
 
-BYTE *GetRegKeyData(HKEY hMainKey, const char *subKey, const char *keyName, bool &success, int &size)
-{
-	BYTE *bValue;
-	DWORD dDataLen = p_GetRegKeySize(hMainKey, subKey, keyName);
+    byte *GetKeyData(HKEY mainKey, const std::string &subKey, const std::string &keyName, bool &success, unsigned long &size)
+    {
+        BYTE *bValue;
+        DWORD dDataLen = p_GetKeySize(mainKey, subKey, keyName);
 
-	if (dDataLen == 0)
-	{
-		success = false;
-		return NULL;
-	}
+        if (dDataLen == 0)
+        {
+            success = false;
+            return nullptr;
+        }
 
-	bValue = new BYTE[dDataLen];
-	success = p_GetRegKeyValue(hMainKey, subKey, keyName, dDataLen, bValue);
-	size = (int)dDataLen;
+        bValue = new BYTE[dDataLen];
+        success = p_GetKeyValue(mainKey, subKey, keyName, dDataLen, bValue);
+        size = (int)dDataLen;
 
-	if (!success)
-	{
-		delete[] bValue;
-		return NULL;
-	}
-	else
-	{
-		return bValue;
-	}
-}
+        if (!success)
+        {
+            delete[] bValue;
+            return nullptr;
+        }
+        else
+        {
+            return bValue;
+        }
+    }
 
-bool DeleteRegKey(HKEY hMainKey, const char *subKey)
-{
-	return (ERROR_SUCCESS == RegDeleteKey(hMainKey, subKey));
-}
+    bool DeleteKey(HKEY mainKey, const std::string &subKey)
+    {
+        return (ERROR_SUCCESS == RegDeleteKey(mainKey, subKey.c_str()));
+    }
 
-bool DeleteRegKeyValue(HKEY hMainKey, const char *subKey, const char *keyName)
-{
-	HKEY hKey;
+    bool DeleteKeyValue(HKEY mainKey, const std::string &subKey, const std::string &keyName)
+    {
+        HKEY hKey;
 
-	if (RegOpenKeyEx(hMainKey, subKey, 0, KEY_SET_VALUE, &hKey) != ERROR_SUCCESS)
-	{
-		return false;
-	}
+        if (RegOpenKeyEx(mainKey, subKey.c_str(), 0U, KEY_SET_VALUE, &hKey) != ERROR_SUCCESS)
+        {
+            return false;
+        }
 
-	if (RegDeleteValue(hKey, keyName) != ERROR_SUCCESS)
-	{
-		RegCloseKey(hKey);
-		return false;
-	}
+        if (RegDeleteValue(hKey, keyName.c_str()) != ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            return false;
+        }
 
-	RegCloseKey(hKey);
+        RegCloseKey(hKey);
+        return true;
+    }
 
-	return true;
 }

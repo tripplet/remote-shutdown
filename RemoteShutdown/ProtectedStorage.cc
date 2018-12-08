@@ -35,7 +35,7 @@ ProtectedStorage::~ProtectedStorage()
 bool ProtectedStorage::save(std::string const &key, std::string const &data)
 {
 	DATA_BLOB* encryptedData = encrypt(data);
-	bool ret = SetRegKeyValue(DEFAULT_REG_ROOT, subkey.c_str(), key.c_str(), encryptedData->pbData, static_cast<int>(encryptedData->cbData));
+	bool ret = registry::SetKeyValue(DEFAULT_REG_ROOT, subkey.c_str(), key.c_str(), encryptedData->pbData, static_cast<int>(encryptedData->cbData));
 
 	LocalFree(encryptedData->pbData);
 	delete encryptedData;
@@ -46,12 +46,13 @@ bool ProtectedStorage::save(std::string const &key, std::string const &data)
 std::string ProtectedStorage::read(std::string const &key)
 {
 	bool success = false;
-	int size = 0;
+	unsigned long size = 0;
 	DATA_BLOB input;
 
-	input.pbData = GetRegKeyData(DEFAULT_REG_ROOT, subkey.c_str(), key.c_str(), success, size);
+	input.pbData = registry::GetKeyData(DEFAULT_REG_ROOT, subkey.c_str(), key.c_str(), success, size);
 
-	if (success) {
+	if (success)
+    {
 		input.cbData = static_cast<int>(size);
 		std::string returnValue = decrypt(input);
 
@@ -61,7 +62,7 @@ std::string ProtectedStorage::read(std::string const &key)
 	}
 	else
 	{
-		return std::string("");
+		return "";
 	}
 }
 
