@@ -16,6 +16,5 @@ namespace sha256
 
     std::string ToHex(std::vector<byte> const &data);
 
-    bool constant_time_compare(const void *a, const void *b, const size_t size);
+    bool constant_time_compare(std::string const &value1, std::string const &value2);
 };
-

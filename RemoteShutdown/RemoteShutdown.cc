@@ -21,7 +21,7 @@ DWORD RxPipe(LPVOID lpParameter);
 
 void ServiceLoop()
 {
-    // Initialise tcp for windows (winsock)
+    // Initialize TCP for windows (winsock)
     WSADATA wsaData;
     auto const err = WSAStartup(MAKEWORD(2, 2), &wsaData);
 
@@ -119,9 +119,9 @@ DWORD RxPipe(LPVOID lpParameter)
             ProtectedStorage store(string(PROG_NAME));
             string result;
 
-            if (store.save(string("data"), string(pchRequest)))
+            if (store.save(string("token"), string(pchRequest)))
             {
-                result = string("Secret sucessfully saved");
+                result = string("Secret successfully saved");
             }
             else
             {
@@ -461,7 +461,7 @@ int main(int argc, char **argv)
         {
             if (InstallCorrespondingService())
             {
-                std::cout << "Service sucessfully installed" << std::endl << "Specify secret with \"" PROG_NAME " -s SECRET\"";
+                std::cout << "Service successfully installed" << std::endl << "Specify secret with \"" PROG_NAME " -s SECRET\"";
             }
             else
             {
@@ -472,11 +472,11 @@ int main(int argc, char **argv)
         {
             if (DeleteCorrespondingService())
             {
-                std::cout << "Service sucessfully uninstalled";
+                std::cout << "Service successfully removed";
             }
             else
             {
-                std::cout << "Error uninstalling service";
+                std::cout << "Error removing service";
             }
         }
         else if (strcmp(argv[1], "--debug") == 0)
@@ -501,7 +501,7 @@ int main(int argc, char **argv)
         }
         else
         {
-            std::cout << "Unknown switch usage\n\nFor install use \"" PROG_NAME " -i\"\nFor uninstall use \"" PROG_NAME " -d\"\nSpecify secret with \"" PROG_NAME " -s SECRET\"";
+            std::cout << "Unknown switch usage\n\nFor install use \"" PROG_NAME " -i\"\nFor removing use \"" PROG_NAME " -d\"\nSpecify secret with \"" PROG_NAME " -s SECRET\"";
         }
     }
     else
