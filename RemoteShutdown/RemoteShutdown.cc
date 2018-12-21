@@ -17,6 +17,7 @@ bool isRemoteUserLoggedIn();
 DWORD RxPipe(LPVOID lpParameter);
 
 #include <iostream>
+#include <ctime>
 
 
 void ServiceLoop()
@@ -194,7 +195,13 @@ std::string MessageRecieved(const char* message, in_addr ip)
     strncpy(sMessage, message, strlen(message) + 1);
     strlwr(sMessage);
 
-    // challange request
+
+    if (0 == strcmpi(sMessage, "ping"))
+    {
+        return "PONG";
+    }
+
+    // challenge request
     if (0 == strcmpi(sMessage, "request_shutdown"))
     {
         lastChallange = CChallengeResponse::createChallange();
@@ -215,7 +222,7 @@ std::string MessageRecieved(const char* message, in_addr ip)
     if (0 == strnicmp(sMessage, "shutdown", 8))
     {
         std::string ret;
-        std::string secret = store.read(string("data"));
+        std::string secret = store.read(string("token"));
 
         if (secret.compare("") == 0)
         {
@@ -225,7 +232,7 @@ std::string MessageRecieved(const char* message, in_addr ip)
             return std::string("INTERNAL ERROR");
         }
 
-        if (!lastChallange.empty() && CChallengeResponse::verifyResponse(lastChallange, secret, std::string(sMessage + 9)))
+        if (!lastChallange.empty() && CChallengeResponse::verifyResponse(lastChallange, secret, std::string(sMessage)))
         {
 
             secret.erase();
@@ -296,7 +303,7 @@ std::string MessageRecieved(const char* message, in_addr ip)
             return std::string("INTERNAL ERROR");
         }
 
-        if (!lastChallange.empty() && CChallengeResponse::verifyResponse(lastChallange, secret, std::string(sMessage + 15)))
+        if (!lastChallange.empty() && CChallengeResponse::verifyResponse(lastChallange, secret, std::string(sMessage)))
         {
             secret.erase();
 
