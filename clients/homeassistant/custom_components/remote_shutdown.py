@@ -40,16 +40,7 @@ def setup(hass, config):
         hash = hmac.new(key.encode('ascii'), message, hashlib.sha256)
         return f'{cmd}.{challenge}#{hash.hexdigest()}'
 
-    def send(call):
-        """Send the shutdown command"""
-        host = call.data.get(CONF_HOST)
-        secret = call.data.get(CONF_ACCESS_TOKEN)
-        force = call.data.get(CONF_FORCE)
-        port = call.data.get(CONF_PORT)
-        socket_timeout = call.data.get(CONF_TIMEOUT)
-
-        _LOGGER.info(f'Trying shutdown of {host}')
-
+    def shutdown(host, port, secret, force, socket_timeout):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(socket_timeout)
 
@@ -62,14 +53,29 @@ def setup(hass, config):
             s.send((response + '\n').encode('ascii'))
             result = s.recv(2048).decode('ascii')
             if result == '1':
-                _LOGGER.info('Shutdown successful')
+                return True, None
             else:
-                _LOGGER.error(f'Windows PC responded with: {result}')
+                return False, result
         except Exception as exp:
-            _LOGGER.error(f'Error during send shutdown: {exp}')
+                return False, str(exp)
         finally:
             s.close()
 
+    def send(call):
+        """Send the shutdown command"""
+        host = call.data.get(CONF_HOST)
+        port = call.data.get(CONF_PORT)
+        secret = call.data.get(CONF_ACCESS_TOKEN)
+        force = call.data.get(CONF_FORCE)
+        socket_timeout = call.data.get(CONF_TIMEOUT)
+
+        _LOGGER.info(f'Trying shutdown of {host}')
+        result, error = shutdown(host, port, secret, force, socket_timeout)
+
+        if result:
+            _LOGGER.info('Shutdown successful')
+        else:
+            _LOGGER.error(f'Error during send shutdown: {error}')
+
     hass.services.register(DOMAIN, 'send', send, schema=REMOTE_SHUTDOWN_SCHEMA)
     return True
-
