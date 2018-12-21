@@ -196,8 +196,6 @@ namespace sha256
             errorMessage = GetLastErrorMessage();
         }
 
-        errorMessage = GetLastErrorMessage();
-
         // Cleanup
         if (hHash) { BCryptDestroyHash(hHash); }
         if (hAlgorithm) { BCryptCloseAlgorithmProvider(hAlgorithm, 0U); }
