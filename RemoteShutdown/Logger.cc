@@ -48,7 +48,7 @@ void Logger::warn(std::string const &message)
 
 void Logger::error(std::string const &message)
 {
-	LPCSTR messageArray[1] = { message.c_str() };    
+	LPCSTR messageArray[1] = { message.c_str() };
 	ReportEvent(this->eventSource, EVENTLOG_ERROR_TYPE, 0U, 0U, nullptr, 1, 0U, messageArray, nullptr);
 
     this->WriteToConsoleWhileDebugging(std::string("ERROR: ") + message);

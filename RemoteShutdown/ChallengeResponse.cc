@@ -14,7 +14,7 @@ std::string CChallengeResponse::createChallange()
     return sha256::ToHex(*sha256::Hash(std::vector<byte>(random.get(), random.get() + RANDOM_LEN)));
 }
 
-bool CChallengeResponse::verifyResponse(std::string &challenge, std::string &secret, std::string &response)
+bool CChallengeResponse::verifyResponse(std::string const &challenge, std::string const &secret, std::string const &response)
 {
     std::string working;
 

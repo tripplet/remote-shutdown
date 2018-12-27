@@ -15,4 +15,4 @@
 #include "sha256.h"
 #include "Logger.h"
 
-std::string MessageRecieved(const char* message, in_addr ip);
+const std::string MessageRecieved(std::string const &message, in_addr ip);

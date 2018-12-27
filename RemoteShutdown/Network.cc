@@ -55,7 +55,7 @@ DWORD netTCPLoop(LPVOID lpParameter)
         networkThread = nullptr;
         return -1;
 	}
-    
+
 	// Endless loop
 	while (true)
 	{

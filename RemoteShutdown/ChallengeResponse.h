@@ -9,7 +9,7 @@ class CChallengeResponse
 {
   public:
     static std::string createChallange();
-    static bool verifyResponse(std::string &challange, std::string &secret, std::string &response);
+    static bool verifyResponse(std::string const &challange, std::string const &secret, std::string const &response);
 
   private:
     static char *generateRandom(unsigned int len);

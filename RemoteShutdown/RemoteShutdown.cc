@@ -18,6 +18,8 @@ DWORD RxPipe(LPVOID lpParameter);
 
 #include <iostream>
 #include <ctime>
+#include <algorithm>
+#include <string>
 
 
 void ServiceLoop(bool debugging)
@@ -54,7 +56,7 @@ void ServiceLoop(bool debugging)
     hRxPipeThread = CreateThread(nullptr, 0U, (LPTHREAD_START_ROUTINE)RxPipe, nullptr, 0U, nullptr);
 
     logger.debug("Starting tcp thread...");
-    hNetTCPThread = StartNetTCPLoopThread(DEFAULT_PORT);    
+    hNetTCPThread = StartNetTCPLoopThread(DEFAULT_PORT);
 
     logger.debug("Service running");
 
@@ -188,35 +190,37 @@ DWORD RxPipe(LPVOID lpParameter)
     return -1;
 }
 
-std::string MessageRecieved(const char* message, in_addr ip)
+static bool starts_with(const std::string str, const std::string prefix)
+{
+    return ((prefix.size() <= str.size()) && std::equal(prefix.begin(), prefix.end(), str.begin()));
+}
+
+const std::string MessageRecieved(std::string const &message, in_addr ip)
 {
     ProtectedStorage store(std::string(PROG_NAME));
 
-    char *sMessage = new char[strlen(message) + 1];    
-    if (strlen(message) == 0)
+    if (message.length() == 0)
     {
-        return std::string("EMPTY");
+        return "";
     }
 
     logger.debug(std::string("MessageRechived: ") + message);
 
-    strncpy(sMessage, message, strlen(message) + 1);
-    strlwr(sMessage);
 
-    if (0 == strcmpi(sMessage, "ping"))
+    if (message == "ping")
     {
-        return "PONG";
+        return "pong";
     }
 
     // challenge request
-    if (0 == strcmpi(sMessage, "request_shutdown"))
+    if (message == "request_shutdown")
     {
         lastChallange = CChallengeResponse::createChallange();
 
         if (lastChallange.compare("") == 0)
         {
             logger.error("Error in cryptographic module");
-            return std::string("INTERNAL ERROR");
+            return std::string("internal error");
         }
 
         lastChallangeTime = time(NULL);
@@ -224,7 +228,7 @@ std::string MessageRecieved(const char* message, in_addr ip)
     }
 
     // shutdown
-    if (0 == strnicmp(sMessage, "shutdown", 8))
+    if (starts_with(message, "shutdown."))
     {
         std::string ret;
         std::string secret = store.read(string("token"));
@@ -232,18 +236,15 @@ std::string MessageRecieved(const char* message, in_addr ip)
         if (secret.compare("") == 0)
         {
             logger.error("No valid secret found");
-            return std::string("INTERNAL ERROR");
+            return std::string("no token configured in service");
         }
 
-        if (!lastChallange.empty() && CChallengeResponse::verifyResponse(lastChallange, secret, std::string(sMessage)))
+        if (!lastChallange.empty() && CChallengeResponse::verifyResponse(lastChallange, secret, message))
         {
-
             secret.erase();
 
             if (difftime(time(NULL), lastChallangeTime) <= RESPONSE_LIMIT)
             {
-                delete[] sMessage;
-
                 logger.info("Shutdown command recognized");
 
                 if (isUserLoggedOn())
@@ -277,19 +278,19 @@ std::string MessageRecieved(const char* message, in_addr ip)
             }
             else
             {
-                ret = std::string("SLOW");
+                ret = std::string("slow");
             }
         }
         else
         {
-            ret = std::string("INVALID");
+            ret = std::string("invalid");
         }
 
         lastChallange.clear();
         return ret;
     }
 
-    if (0 == strnicmp(sMessage, "admin_shutdown", 14))
+    if (starts_with(message, "admin_shutdown"))
     {
         std::string ret;
         std::string secret = store.read(string("data"));
@@ -297,17 +298,15 @@ std::string MessageRecieved(const char* message, in_addr ip)
         if (secret.compare("") == 0)
         {
             logger.error("No valid secret found");
-            return std::string("INTERNAL ERROR");
+            return std::string("no token configured in service");
         }
 
-        if (!lastChallange.empty() && CChallengeResponse::verifyResponse(lastChallange, secret, std::string(sMessage)))
+        if (!lastChallange.empty() && CChallengeResponse::verifyResponse(lastChallange, secret, message))
         {
             secret.erase();
 
             if (difftime(time(NULL), lastChallangeTime) <= RESPONSE_LIMIT)
             {
-                delete[] sMessage;
-
                 logger.info("Admin Shutdown command recognized");
 
                 if (isUserLoggedOn())
@@ -340,19 +339,19 @@ std::string MessageRecieved(const char* message, in_addr ip)
             }
             else
             {
-                ret = std::string("SLOW");
+                ret = std::string("slow");
             }
         }
         else
         {
-            ret = std::string("INVALID");
+            ret = std::string("invalid");
         }
 
         lastChallange.clear();
         return ret;
     }
 
-    return std::string("NOT_RECOGNIZED");
+    return "unknown command";
 }
 
 void setSecret(string &secret)
@@ -413,7 +412,7 @@ void setSecret(string &secret)
     }
 
     // Send a message to the pipe server
-    cbToWrite = (secret.length() + 1) * sizeof(TCHAR);
+    cbToWrite = static_cast<DWORD>((secret.length() + 1) * sizeof(TCHAR));
 
     fSuccess = WriteFile(
         hPipe,          // pipe handle
@@ -459,7 +458,8 @@ int main(int argc, char **argv)
 {
     if (argc > 1)
     {
-        if (strcmp(argv[1], "-i") == 0)
+        auto parameter = std::string(argv[1]);
+        if (parameter == "-i")
         {
             if (InstallCorrespondingService())
             {
@@ -470,7 +470,7 @@ int main(int argc, char **argv)
                 std::cout << "Error installing service: Try running as administrator";
             }
         }
-        else if (strcmp(argv[1], "-d") == 0)
+        else if (parameter == "-r")
         {
             if (DeleteCorrespondingService())
             {
@@ -481,7 +481,7 @@ int main(int argc, char **argv)
                 std::cout << "Error removing service";
             }
         }
-        else if (strcmp(argv[1], "--debug") == 0)
+        else if (parameter == "--debug")
         {
             std::cout << "Debug running" << std::endl;
 
@@ -490,11 +490,11 @@ int main(int argc, char **argv)
 
             ServiceLoop(true);
         }
-        else if (strcmp(argv[1], "-s") == 0)
+        else if (parameter == "-s")
         {
             if (argc == 3)
             {
-                setSecret(string(argv[2]));
+                setSecret(std::string(argv[2]));
             }
             else
             {
@@ -503,7 +503,7 @@ int main(int argc, char **argv)
         }
         else
         {
-            std::cout << "Unknown switch usage\n\nFor install use \"" PROG_NAME " -i\"\nFor removing use \"" PROG_NAME " -d\"\nSpecify secret with \"" PROG_NAME " -s SECRET\"";
+            std::cout << "Unknown switch usage\n\nFor install use \"" PROG_NAME " -i\"\nFor removing use \"" PROG_NAME " -r\"\nSpecify secret with \"" PROG_NAME " -s SECRET\"";
         }
     }
     else
@@ -587,7 +587,7 @@ bool isUserLoggedOn()
 bool AquireShutdownPrivilege()
 {
     HANDLE token;
-    LUID luid;    
+    LUID luid;
 
     // Retrieve a handle of the access token
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
