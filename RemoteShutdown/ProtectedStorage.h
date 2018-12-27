@@ -21,7 +21,7 @@ private:
 	DATA_BLOB *entropy;
 
 public:
-	ProtectedStorage(std::string const &storageName);
+	explicit ProtectedStorage(std::string const &storageName);
 	ProtectedStorage(std::string const &storageName, std::string const &entropy);
 	~ProtectedStorage();
 

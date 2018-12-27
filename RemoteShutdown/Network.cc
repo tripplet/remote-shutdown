@@ -13,51 +13,42 @@ HANDLE StartNetTCPLoopThread(int port)
 
 DWORD netTCPLoop(LPVOID lpParameter)
 {
-	struct sockaddr_in server;
-	struct sockaddr_in connected_client;
+    // Create server socket
+    auto acceptSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (acceptSocket == INVALID_SOCKET)
+    {
+        return 2;
+    }
 
-	SOCKET connectedSocket, acceptSocket;
-	char buffer[2049];
-	int client_len, rc, data_len;
-	basic_string <char>::size_type index;
+    struct sockaddr_in server;
+    memset(&server, 0, sizeof(sockaddr_in));
+    server.sin_family = AF_INET;
+    server.sin_port = htons(iTCPPort);
+    server.sin_addr.s_addr = INADDR_ANY;
 
-	client_len = sizeof(connected_client);
+    // Bind to server socket
+    int rc = bind(acceptSocket, reinterpret_cast<sockaddr*>(&server), sizeof(sockaddr_in));
+    if (rc == SOCKET_ERROR)
+    {
+        return 3;
+    }
 
-	// Erzeuge das Socket
-	acceptSocket = socket(AF_INET, SOCK_STREAM, 0);
-	if (acceptSocket == INVALID_SOCKET) {
-		return 2;
-	}
-
-	memset(&server, 0, sizeof(sockaddr_in));
-	server.sin_family = AF_INET;
-	server.sin_port = htons(iTCPPort);
-	server.sin_addr.s_addr = INADDR_ANY;
-
-	// bind server-socket
-	rc = bind(acceptSocket, (SOCKADDR*)&server, sizeof(sockaddr_in));
-
-	if (rc == SOCKET_ERROR)
-	{
-		return 3;
-	}
-
-	// Auf Verbindungen warten
+	// Listen for clients to connect
 	rc = listen(acceptSocket, 10);
 	if (rc == SOCKET_ERROR)
 	{
 		return 4;
 	}
-
-	std::string message;
-
-	// Endlos auf neue Verbindugen warten
+    
+	// Endless loop
 	while (true)
 	{
-		message = "";
+        std::string message = "";
+        struct sockaddr_in connected_client;
+        int client_len = sizeof(connected_client);
 
-		// TCP Sitzung verbinden
-		connectedSocket = accept(acceptSocket, (sockaddr*)&connected_client, &client_len);
+		// Wait for client to connect
+        auto connectedSocket = accept(acceptSocket, reinterpret_cast<sockaddr*>(&connected_client), &client_len);
 		if (connectedSocket == INVALID_SOCKET)
 		{
 #if _DEBUG
@@ -66,10 +57,12 @@ DWORD netTCPLoop(LPVOID lpParameter)
 			return 5;
 		}
 
-		// recieve data
+		// Recieve data
+        int data_len = 0;
 		do
 		{
-			data_len = recv(connectedSocket, buffer, 2048, 0);
+            char buffer[4096];
+			data_len = recv(connectedSocket, buffer, 4096, 0);
 
 			if (data_len > 0)
 			{
@@ -77,15 +70,15 @@ DWORD netTCPLoop(LPVOID lpParameter)
 				buffer[data_len] = '\0';
 				message.append(buffer);
 
-				index = message.find("\n");
+				auto index = message.find("\n");
 
 				if (index != string::npos)
 				{
-					string tmp = message.substr(0, index);
+					auto tmp = message.substr(0, index);
 					message.clear();
 
-					std::string ret = MessageRecieved(tmp.c_str(), connected_client.sin_addr);
-					send(connectedSocket, ret.c_str(), (int)ret.length(), 0);
+					auto response = MessageRecieved(tmp.c_str(), connected_client.sin_addr);
+                    send(connectedSocket, response.c_str(), static_cast<int>(response.length()), 0U);
 				}
 			}
 		} while (data_len > 0);

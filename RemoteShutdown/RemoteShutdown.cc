@@ -190,19 +190,15 @@ DWORD RxPipe(LPVOID lpParameter)
 
 std::string MessageRecieved(const char* message, in_addr ip)
 {
-    DWORD bufCharCount = MAX_COMPUTERNAME_LENGTH + 1;
-    char *sMessage = new char[strlen(message) + 1];
+    ProtectedStorage store(std::string(PROG_NAME));
 
-    ProtectedStorage store(string(PROG_NAME));
-
+    char *sMessage = new char[strlen(message) + 1];    
     if (strlen(message) == 0)
     {
         return std::string("EMPTY");
     }
 
-    // TODO
-    logger.debug("MessageRechived: ");
-    logger.debug(message);
+    logger.debug(std::string("MessageRechived: ") + message);
 
     strncpy(sMessage, message, strlen(message) + 1);
     strlwr(sMessage);
