@@ -1,14 +1,21 @@
 #include "Network.h"
 
-int iTCPPort;
-int iUDPPort;
+
+extern Logger logger;
+int tcpPort;
+HANDLE networkThread = nullptr;
 
 HANDLE StartNetTCPLoopThread(int port)
 {
-	iTCPPort = port;
-	return CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)netTCPLoop, NULL, 0, NULL);
-	//netTCPLoop(NULL);
-	//return 0;
+    if (networkThread != nullptr)
+    {
+        logger.error("TCP network thread already running");
+        return 0;
+    }
+
+    tcpPort = port;
+    networkThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)netTCPLoop, NULL, 0, NULL);
+    return networkThread;
 }
 
 DWORD netTCPLoop(LPVOID lpParameter)
@@ -17,27 +24,36 @@ DWORD netTCPLoop(LPVOID lpParameter)
     auto acceptSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (acceptSocket == INVALID_SOCKET)
     {
-        return 2;
+        logger.error("Error creating socket");
+
+        networkThread = nullptr;
+        return -1;
     }
 
     struct sockaddr_in server;
     memset(&server, 0, sizeof(sockaddr_in));
     server.sin_family = AF_INET;
-    server.sin_port = htons(iTCPPort);
+    server.sin_port = htons(tcpPort);
     server.sin_addr.s_addr = INADDR_ANY;
 
     // Bind to server socket
     int rc = bind(acceptSocket, reinterpret_cast<sockaddr*>(&server), sizeof(sockaddr_in));
     if (rc == SOCKET_ERROR)
     {
-        return 3;
+        logger.error("Error binding socket");
+
+        networkThread = nullptr;
+        return -1;
     }
 
 	// Listen for clients to connect
 	rc = listen(acceptSocket, 10);
 	if (rc == SOCKET_ERROR)
 	{
-		return 4;
+        logger.error("Error listening on socket");
+
+        networkThread = nullptr;
+        return -1;
 	}
     
 	// Endless loop
@@ -51,10 +67,10 @@ DWORD netTCPLoop(LPVOID lpParameter)
         auto connectedSocket = accept(acceptSocket, reinterpret_cast<sockaddr*>(&connected_client), &client_len);
 		if (connectedSocket == INVALID_SOCKET)
 		{
-#if _DEBUG
-			printf("accept failed: %d\n", WSAGetLastError());
-#endif
-			return 5;
+            logger.error(std::string("Error accepting client connection: ") + std::to_string(WSAGetLastError()));
+
+            networkThread = nullptr;
+            return -1;
 		}
 
 		// Recieve data
