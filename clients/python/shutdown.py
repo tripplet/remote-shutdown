@@ -15,7 +15,7 @@ def authenticated_response(challenge, key, force):
         cmd = 'shutdown'
     message = f'{cmd}.{challenge}'.encode('ascii')
     hash = hmac.new(key.encode('ascii'), message, hashlib.sha256)
-    return f'{cmd}.{challenge}#{hash.hexdigest()}'
+    return f'{cmd}.{hash.hexdigest()}'
 
 def shutdown(host, port, secret, force, socket_timeout):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -24,7 +24,7 @@ def shutdown(host, port, secret, force, socket_timeout):
     try:
         # connect, request the challenge and send the signed response
         s.connect((host, port))
-        s.send(b'request_shutdown\n')
+        s.send(b'request_challange\n')
         challenge = s.recv(2048).decode('ascii')
         response = authenticated_response(challenge, secret, force)
         s.send((response + '\n').encode('ascii'))

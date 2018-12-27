@@ -82,6 +82,14 @@ DWORD netTCPLoop(LPVOID lpParameter)
 
 			if (data_len > 0)
 			{
+                for (size_t i = 0; i < data_len - 1; i++)
+                {
+                    if (buffer[i] == '\0')
+                    {
+                        break;
+                    }
+                }
+
 				// terminate string
 				buffer[data_len] = '\0';
 				message.append(buffer);

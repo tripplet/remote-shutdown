@@ -213,7 +213,7 @@ const std::string MessageRecieved(std::string const &message, in_addr ip)
     }
 
     // challenge request
-    if (message == "request_shutdown")
+    if (message == "request_challange")
     {
         lastChallange = CChallengeResponse::createChallange();
 
@@ -290,7 +290,7 @@ const std::string MessageRecieved(std::string const &message, in_addr ip)
         return ret;
     }
 
-    if (starts_with(message, "admin_shutdown"))
+    if (starts_with(message, "admin_shutdown."))
     {
         std::string ret;
         std::string secret = store.read(string("data"));
@@ -363,7 +363,7 @@ void setSecret(string &secret)
     LPTSTR lpszPipename = TEXT("\\\\.\\pipe\\" PROG_NAME "Pipe");
 
     // Try to open a named pipe; wait for it, if necessary
-    while (1)
+    while (true)
     {
         hPipe = CreateFile(
             lpszPipename, // pipe name
@@ -579,6 +579,7 @@ bool isUserLoggedOn()
 
     return false;
 }
+
 
 /**
  * Acquire the privilege for shutting down the pc

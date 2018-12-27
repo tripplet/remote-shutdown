@@ -16,14 +16,16 @@ std::string CChallengeResponse::createChallange()
 
 bool CChallengeResponse::verifyResponse(std::string const &challenge, std::string const &secret, std::string const &response)
 {
-    std::string working;
+    auto index = response.find(".");
+    if (index == std::string::npos)
+    {
+        return false;
+    }
 
-    working += challenge;
-    working += secret;
+    auto command = response.substr(0U, index);
+    auto valid_response = sha256::ToHex(*sha256::HashHMAC(secret, command + "." + challenge));
 
-    std::string valid_response = NULL; // hash(working.c_str(), working.length());
-
-    return (sha256::constant_time_compare(valid_response, response)); // TODO
+    return (sha256::constant_time_compare(command + "." + valid_response, response));
 }
 
 

@@ -38,13 +38,13 @@ namespace sha256
             return false;
         }
 
-        unsigned char result = 0;
+        bool result = true;
         for (size_t i = 0; i < value1.size(); i++)
         {
-            result |= value1.at(i) == value2.at(i);
+            result &= value1.at(i) == value2.at(i);
         }
 
-        return result == 0;
+        return result;
     }
 
     /**
