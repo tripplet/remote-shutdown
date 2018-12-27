@@ -68,7 +68,7 @@ namespace sha256
      * @param message The message
      * @return The sha265 hash as byte array
      */
-    std::shared_ptr<std::vector<byte>> Hash(std::string const &message)
+    std::shared_ptr<std::vector<byte> const> Hash(std::string const &message)
     {
         return Hash(std::vector<byte>(message.begin(), message.end()));
     }
@@ -78,7 +78,7 @@ namespace sha256
      * @param message The message
      * @return The sha265 hash as byte array
      */
-    std::shared_ptr<std::vector<byte>> Hash(std::vector<byte> const &message)
+    std::shared_ptr<std::vector<byte> const> Hash(std::vector<byte> const &message)
     {
         std::string errorMessage;
         BCRYPT_HASH_HANDLE hHash = nullptr;
@@ -140,7 +140,7 @@ namespace sha256
      * @param message The message
      * @return The sha265 HMAC
      */
-    std::shared_ptr<std::vector<byte>> HashHMAC(std::string const &key, std::string const &message)
+    std::shared_ptr<std::vector<byte> const> HashHMAC(std::string const &key, std::string const &message)
     {
         return HashHMAC(std::vector<byte>(key.begin(), key.end()), std::vector<byte>(message.begin(), message.end()));
     }
@@ -151,7 +151,7 @@ namespace sha256
      * @param message The message
      * @return The sha265 HMAC
      */
-    std::shared_ptr<std::vector<byte>> HashHMAC(std::vector<byte> const &key, std::vector<byte> const &message)
+    std::shared_ptr<std::vector<byte> const> HashHMAC(std::vector<byte> const &key, std::vector<byte> const &message)
     {
         // https://stackoverflow.com/questions/22147895/is-it-possible-to-do-a-hmac-with-wincrypt/22155681#22155681
         // https://docs.microsoft.com/de-de/windows/desktop/SecCNG/creating-a-hash-with-cng

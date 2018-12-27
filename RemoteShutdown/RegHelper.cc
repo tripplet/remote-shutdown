@@ -2,7 +2,7 @@
 
 namespace registry
 {
-    bool p_SetKeyValue(HKEY mainKey, const std::string &subKey, const std::string &keyName, DWORD dwType, const byte *value, unsigned long size)
+    bool SetKeyValue(HKEY mainKey, std::string const &subKey, std::string const &keyName, DWORD dwType, const byte *value, unsigned long size)
     {
         HKEY hKey;
         if (RegCreateKeyEx(mainKey, subKey.c_str(), 0U, nullptr, 0U, KEY_WRITE, nullptr, &hKey, nullptr) != ERROR_SUCCESS)
@@ -19,7 +19,7 @@ namespace registry
         return true;
     }
 
-    DWORD p_GetKeySize(HKEY mainKey, const std::string &subKey, const std::string &keyName)
+    DWORD GetKeySize(HKEY mainKey, std::string const &subKey, std::string const &keyName)
     {
         HKEY hKey;
         DWORD dDataSize;
@@ -38,7 +38,7 @@ namespace registry
         return dDataSize;
     }
 
-    bool p_GetKeyValue(HKEY mainKey, const std::string &subKey, const std::string &keyName, DWORD dDataLen, BYTE *data)
+    bool GetKeyValue(HKEY mainKey, std::string const &subKey, std::string const &keyName, DWORD dDataLen, BYTE *data)
     {
         HKEY hKey;
 
@@ -57,35 +57,33 @@ namespace registry
         return true;
     }
 
-    bool SetKeyValue(HKEY mainKey, const std::string &subKey, const std::string &keyName, const std::string &value)
+    bool SetKeyValue(HKEY mainKey, std::string const &subKey, std::string const &keyName, std::string const &value)
     {
-        return p_SetKeyValue(mainKey, subKey, keyName, REG_SZ, reinterpret_cast<byte*>(const_cast<char*>(value.data())), static_cast<unsigned long>(value.length()));
+        return SetKeyValue(mainKey, subKey, keyName, REG_SZ, reinterpret_cast<byte*>(const_cast<char*>(value.data())), static_cast<unsigned long>(value.length()));
     }
 
-    bool SetKeyValue(HKEY mainKey, const std::string &subKey, const std::string &keyName, unsigned long value)
+    bool SetKeyValue(HKEY mainKey, std::string const &subKey, std::string const &keyName, unsigned long value)
     {
-        return p_SetKeyValue(mainKey, subKey, keyName, REG_DWORD, reinterpret_cast<byte*>(&value), sizeof(unsigned long));
+        return SetKeyValue(mainKey, subKey, keyName, REG_DWORD, reinterpret_cast<byte*>(&value), sizeof(unsigned long));
     }
 
-    bool SetKeyValue(HKEY mainKey, const std::string &subKey, const std::string &keyName, const byte *value, unsigned long size)
+    bool SetKeyValue(HKEY mainKey, std::string const &subKey, std::string const &keyName, const byte *value, unsigned long size)
     {
-        return p_SetKeyValue(mainKey, subKey, keyName, REG_BINARY, value, size);
+        return SetKeyValue(mainKey, subKey, keyName, REG_BINARY, value, size);
     }
 
-    /** ############################################################## */
-
-    int GetKeyInt(HKEY mainKey, const std::string &subKey, const std::string &keyName, bool &success)
+    int GetKeyInt(HKEY mainKey, std::string const &subKey, std::string const &keyName, bool &success)
     {
         DWORD dwData = 0;
 
-        success = p_GetKeyValue(mainKey, subKey, keyName, sizeof(DWORD), reinterpret_cast<byte*>(&dwData));
+        success = GetKeyValue(mainKey, subKey, keyName, sizeof(DWORD), reinterpret_cast<byte*>(&dwData));
         return (int)dwData;
     }
 
-    const std::string GetKeyString(HKEY mainKey, const std::string &subKey, const std::string &keyName, bool &success)
+    const std::string GetKeyString(HKEY mainKey, std::string const &subKey, std::string const &keyName, bool &success)
     {
         char *sValue;
-        DWORD dDataLen = p_GetKeySize(mainKey, subKey, keyName);
+        DWORD dDataLen = GetKeySize(mainKey, subKey, keyName);
 
         if (dDataLen == 0)
         {
@@ -95,7 +93,7 @@ namespace registry
 
         sValue = new char[dDataLen];
 
-        success = p_GetKeyValue(mainKey, subKey, keyName, dDataLen, reinterpret_cast<byte*>(sValue));
+        success = GetKeyValue(mainKey, subKey, keyName, dDataLen, reinterpret_cast<byte*>(sValue));
 
         if (!success)
         {
@@ -108,10 +106,10 @@ namespace registry
         }
     }
 
-    byte *GetKeyData(HKEY mainKey, const std::string &subKey, const std::string &keyName, bool &success, unsigned long &size)
+    byte *GetKeyData(HKEY mainKey, std::string const &subKey, std::string const &keyName, bool &success, unsigned long &size)
     {
         BYTE *bValue;
-        DWORD dDataLen = p_GetKeySize(mainKey, subKey, keyName);
+        DWORD dDataLen = GetKeySize(mainKey, subKey, keyName);
 
         if (dDataLen == 0)
         {
@@ -120,7 +118,7 @@ namespace registry
         }
 
         bValue = new BYTE[dDataLen];
-        success = p_GetKeyValue(mainKey, subKey, keyName, dDataLen, bValue);
+        success = GetKeyValue(mainKey, subKey, keyName, dDataLen, bValue);
         size = (int)dDataLen;
 
         if (!success)
@@ -134,12 +132,12 @@ namespace registry
         }
     }
 
-    bool DeleteKey(HKEY mainKey, const std::string &subKey)
+    bool DeleteKey(HKEY mainKey, std::string const &subKey)
     {
         return (ERROR_SUCCESS == RegDeleteKey(mainKey, subKey.c_str()));
     }
 
-    bool DeleteKeyValue(HKEY mainKey, const std::string &subKey, const std::string &keyName)
+    bool DeleteKeyValue(HKEY mainKey, std::string const &subKey, std::string const &keyName)
     {
         HKEY hKey;
 
@@ -157,5 +155,4 @@ namespace registry
         RegCloseKey(hKey);
         return true;
     }
-
 }
