@@ -20,19 +20,34 @@ DWORD RxPipe(LPVOID lpParameter);
 #include <ctime>
 
 
-void ServiceLoop()
+void ServiceLoop(bool debugging)
 {
+    // Init logger
+    logger.init(debugging);
+
     // Initialize TCP for windows (winsock)
     WSADATA wsaData;
     auto const err = WSAStartup(MAKEWORD(2, 2), &wsaData);
 
     if (err != 0)
     {
+        logger.error(std::string("Initiaizing winsock failed with errorcode: ") + std::to_string(err) + ", exiting");
         return;
+    }
+    else
+    {
+        logger.debug("Winsock initialized");
     }
 
     hRxPipeThread = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)RxPipe, nullptr, 0, nullptr);
     hNetTCPThread = StartNetTCPLoopThread(DEFAULT_PORT);
+    logger.debug("Starting pipe thread...");
+    hRxPipeThread = CreateThread(nullptr, 0U, (LPTHREAD_START_ROUTINE)RxPipe, nullptr, 0U, nullptr);
+
+    logger.debug("Starting tcp thread...");
+    hNetTCPThread = StartNetTCPLoopThread(DEFAULT_PORT);    
+
+    logger.debug("Service running");
 
     // Wait for stop event
     WaitForSingleObject(g_StopEvent, INFINITE);
@@ -175,26 +190,12 @@ std::string MessageRecieved(const char* message, in_addr ip)
         return std::string("EMPTY");
     }
 
-    logFile->newTmpEntry();
-    logFile->addTmpEntry("MessageRechived ");
-
-    logFile->addTmpEntry("(TCP): ");
-
-    if (strlen(message) > 20)
-    {
-        logFile->addTmpEntry(message, 20);
-        logFile->addTmpEntry("...");
-    }
-    else
-    {
-        logFile->addTmpEntry(message);
-    }
-
-    logFile->writeTmpEntry();
+    // TODO
+    logger.debug("MessageRechived: ");
+    logger.debug(message);
 
     strncpy(sMessage, message, strlen(message) + 1);
     strlwr(sMessage);
-
 
     if (0 == strcmpi(sMessage, "ping"))
     {
@@ -208,9 +209,7 @@ std::string MessageRecieved(const char* message, in_addr ip)
 
         if (lastChallange.compare("") == 0)
         {
-            logFile->newTmpEntry();
-            logFile->addTmpEntry("Error in cryptographic module");
-            logFile->writeTmpEntry();
+            logger.error("Error in cryptographic module");
             return std::string("INTERNAL ERROR");
         }
 
@@ -226,9 +225,7 @@ std::string MessageRecieved(const char* message, in_addr ip)
 
         if (secret.compare("") == 0)
         {
-            logFile->newTmpEntry();
-            logFile->addTmpEntry("No valid secret found");
-            logFile->writeTmpEntry();
+            logger.error("No valid secret found");
             return std::string("INTERNAL ERROR");
         }
 
@@ -241,24 +238,21 @@ std::string MessageRecieved(const char* message, in_addr ip)
             {
                 delete[] sMessage;
 
-                logFile->newTmpEntry();
-                logFile->addTmpEntry("Shutdown command recognized");
+                logger.info("Shutdown command recognized");
 
                 if (isUserLoggedOn())
                 {
-                    logFile->addTmpEntry(" -> User logged in -> ABORT\n");
-                    logFile->writeTmpEntry();
+                    logger.info(" -> User logged in -> ABORT\n");
                     return std::string("USER_LOGGEDIN");
                 }
 
                 if (isRemoteUserLoggedIn())
                 {
-                    logFile->addTmpEntry(" -> RemoteUser logged in -> ABORT\n");
-                    logFile->writeTmpEntry();
+                    logger.info(" -> RemoteUser logged in -> ABORT\n");
                     return std::string("USER_LOGGEDIN");
                 }
 
-                logFile->writeEntry(" -> User not logged in");
+                logger.info(" -> User not logged in");
 
                 // get shutdown priv
                 if (!EnableShutdownPrivNT())
@@ -268,11 +262,11 @@ std::string MessageRecieved(const char* message, in_addr ip)
                     return std::string("FAILED");
                 }
 
-                logFile->addTmpEntry(" -> ShutdownPriv achieved");
+                //logFile->addTmpEntry(" -> ShutdownPriv achieved");
 
                 // Shutdown pc
                 ExitWindowsEx(EWX_POWEROFF | EWX_FORCEIFHUNG, 0);
-                logFile->addTmpEntry(" -> Shutdown performed");
+                logger.info(" -> Shutdown performed");
                 logFile->writeTmpEntry();
                 return std::string("1");
             }
@@ -297,9 +291,7 @@ std::string MessageRecieved(const char* message, in_addr ip)
 
         if (secret.compare("") == 0)
         {
-            logFile->newTmpEntry();
-            logFile->addTmpEntry("No valid secret found");
-            logFile->writeTmpEntry();
+            logger.error("No valid secret found");
             return std::string("INTERNAL ERROR");
         }
 
@@ -311,20 +303,19 @@ std::string MessageRecieved(const char* message, in_addr ip)
             {
                 delete[] sMessage;
 
-                logFile->newTmpEntry();
-                logFile->addTmpEntry("Admin Shutdown command recognized");
+                logger.info("Admin Shutdown command recognized");
 
                 if (isUserLoggedOn())
                 {
-                    logFile->addTmpEntry(" -> User logged in");
+                    logger.info(" -> User logged in");
                 }
                 else if (isRemoteUserLoggedIn())
                 {
-                    logFile->addTmpEntry(" -> RemoteUser logged in");
+                    logger.info(" -> RemoteUser logged in");
                 }
                 else
                 {
-                    logFile->addTmpEntry(" -> User not logged on");
+                    logger.info(" -> User not logged on");
                 }
 
                 // get shutdown priv
@@ -339,8 +330,7 @@ std::string MessageRecieved(const char* message, in_addr ip)
 
                 // Shutdown pc
                 ExitWindowsEx(EWX_POWEROFF | EWX_FORCEIFHUNG, 0);
-                logFile->writeEntry(" -> AdminShutdown performed\n");
-                logFile->writeTmpEntry();
+                logger.info(" -> AdminShutdown performed\n");
                 return std::string("1");
             }
             else
@@ -488,12 +478,12 @@ int main(int argc, char **argv)
         }
         else if (strcmp(argv[1], "--debug") == 0)
         {
-            std::cout << "Debug running";
+            std::cout << "Debug running" << std::endl;
 
             auto hash = sha256::ToHex(*sha256::HashHMAC(std::string("test"), std::string("abcdef")));
             auto secret = CChallengeResponse::createChallange();
 
-            ServiceLoop();
+            ServiceLoop(true);
         }
         else if (strcmp(argv[1], "-s") == 0)
         {

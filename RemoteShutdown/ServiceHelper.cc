@@ -39,7 +39,7 @@ void WINAPI ServiceMain(DWORD argc, LPTSTR *argv)
 		ServiceQuit();
 	}
 
-	ServiceLoop();
+	ServiceLoop(false);
 	ServiceQuit();
 
 	return;

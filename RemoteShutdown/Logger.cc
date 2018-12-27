@@ -1,10 +1,11 @@
 #include "Logger.h"
 
 #include <Windows.h>
+#include <iostream>
 
-Logger::Logger(const char *name)
+Logger::Logger(const std::string &name)
 {
-	this->eventSource = RegisterEventSource(nullptr, name);
+    this->name = name;
 }
 
 Logger::~Logger()
@@ -15,20 +16,46 @@ Logger::~Logger()
 	}
 }
 
-void Logger::info(const char *message)
+void Logger::init(bool debugging)
 {
-	LPCSTR messageArray[1] = { message };
-	ReportEvent(this->eventSource, EVENTLOG_INFORMATION_TYPE, 0, 0, nullptr, 1, 0, messageArray, nullptr);
+    this->debugging = debugging;
+    this->eventSource = RegisterEventSource(nullptr, this->name.c_str());
 }
 
-void Logger::warn(const char *message)
+void Logger::WriteToConsole(std::string const &message)
 {
-	LPCSTR messageArray[1] = { message };
-	ReportEvent(this->eventSource, EVENTLOG_WARNING_TYPE, 0, 0, nullptr, 1, 0, messageArray, nullptr);
+    if (this->debugging)
+    {
+        std::cout << message << std::endl;
+    }
 }
 
-void Logger::error(const char *message)
+void Logger::info(std::string const &message)
 {
-	LPCSTR messageArray[1] = { message };
-	ReportEvent(this->eventSource, EVENTLOG_ERROR_TYPE, 0, 0, nullptr, 1, 0, messageArray, nullptr);
+	LPCSTR messageArray[1] = { message.c_str() };
+	ReportEvent(this->eventSource, EVENTLOG_INFORMATION_TYPE, 0U, 0U, nullptr, 1, 0U, messageArray, nullptr);
+
+    this->WriteToConsole(std::string("INFO: ") + message);
 }
+
+void Logger::warn(std::string const &message)
+{
+	LPCSTR messageArray[1] = { message.c_str() };
+	ReportEvent(this->eventSource, EVENTLOG_WARNING_TYPE, 0U, 0U, nullptr, 1, 0U, messageArray, nullptr);
+
+    this->WriteToConsole(std::string("WARN: ") + message);
+}
+
+void Logger::error(std::string const &message)
+{
+	LPCSTR messageArray[1] = { message.c_str() };    
+	ReportEvent(this->eventSource, EVENTLOG_ERROR_TYPE, 0U, 0U, nullptr, 1, 0U, messageArray, nullptr);
+
+    this->WriteToConsole(std::string("ERROR: ") + message);
+}
+
+void Logger::debug(std::string const &message)
+{
+    this->WriteToConsole(std::string("DEBUG: ") + message);
+}
+

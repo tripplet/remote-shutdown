@@ -13,5 +13,5 @@ bool StartCorrespondingService();
 bool DeleteCorrespondingService();
 
 // Implement in Mmin class
-void ServiceLoop();
+void ServiceLoop(bool debugging);
 void ServiceQuit();
