@@ -23,7 +23,7 @@ DWORD RxPipe(LPVOID lpParameter);
 void ServiceLoop(bool debugging)
 {
     // Init logger
-    logger.init(debugging);
+    logger.Init(debugging);
 
     // Initialize TCP for windows (winsock)
     WSADATA wsaData;

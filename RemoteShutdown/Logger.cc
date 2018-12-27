@@ -16,13 +16,13 @@ Logger::~Logger()
 	}
 }
 
-void Logger::init(bool debugging)
+void Logger::Init(bool debugging)
 {
     this->debugging = debugging;
     this->eventSource = RegisterEventSource(nullptr, this->name.c_str());
 }
 
-void Logger::WriteToConsole(std::string const &message)
+void Logger::WriteToConsoleWhileDebugging(std::string const &message)
 {
     if (this->debugging)
     {
@@ -35,7 +35,7 @@ void Logger::info(std::string const &message)
 	LPCSTR messageArray[1] = { message.c_str() };
 	ReportEvent(this->eventSource, EVENTLOG_INFORMATION_TYPE, 0U, 0U, nullptr, 1, 0U, messageArray, nullptr);
 
-    this->WriteToConsole(std::string("INFO: ") + message);
+    this->WriteToConsoleWhileDebugging(std::string("INFO: ") + message);
 }
 
 void Logger::warn(std::string const &message)
@@ -43,7 +43,7 @@ void Logger::warn(std::string const &message)
 	LPCSTR messageArray[1] = { message.c_str() };
 	ReportEvent(this->eventSource, EVENTLOG_WARNING_TYPE, 0U, 0U, nullptr, 1, 0U, messageArray, nullptr);
 
-    this->WriteToConsole(std::string("WARN: ") + message);
+    this->WriteToConsoleWhileDebugging(std::string("WARN: ") + message);
 }
 
 void Logger::error(std::string const &message)
@@ -51,11 +51,11 @@ void Logger::error(std::string const &message)
 	LPCSTR messageArray[1] = { message.c_str() };    
 	ReportEvent(this->eventSource, EVENTLOG_ERROR_TYPE, 0U, 0U, nullptr, 1, 0U, messageArray, nullptr);
 
-    this->WriteToConsole(std::string("ERROR: ") + message);
+    this->WriteToConsoleWhileDebugging(std::string("ERROR: ") + message);
 }
 
 void Logger::debug(std::string const &message)
 {
-    this->WriteToConsole(std::string("DEBUG: ") + message);
+    this->WriteToConsoleWhileDebugging(std::string("DEBUG: ") + message);
 }
 

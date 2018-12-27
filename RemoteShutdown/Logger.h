@@ -10,13 +10,13 @@ private:
     std::string name;
     bool debugging = false;
 
-    void WriteToConsole(std::string const &message);
+    void WriteToConsoleWhileDebugging(std::string const &message);
 
 public:
 	explicit Logger(std::string const &name);
 	~Logger();
 
-    void init(bool debugging);
+    void Init(bool debugging);
 
     void debug(std::string const &message);
     void info(std::string const &message);
