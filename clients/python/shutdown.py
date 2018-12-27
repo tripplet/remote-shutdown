@@ -38,7 +38,7 @@ def shutdown(host, port, secret, force, socket_timeout):
     finally:
         s.close()
 
-result, error = shutdown('localhost', 10102, 'test', True, 30)
+result, error = shutdown('localhost', 10102, 'test', False, 30)
 
 if result:
     print("Shutdown successful")

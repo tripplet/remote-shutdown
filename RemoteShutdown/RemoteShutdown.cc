@@ -11,7 +11,7 @@ std::string lastChallange;
 time_t lastChallangeTime;
 
 // Functions
-bool EnableShutdownPrivNT();
+bool AquireShutdownPrivilege();
 bool isUserLoggedOn();
 bool isRemoteUserLoggedIn();
 DWORD RxPipe(LPVOID lpParameter);
@@ -39,8 +39,17 @@ void ServiceLoop(bool debugging)
         logger.debug("Winsock initialized");
     }
 
-    hRxPipeThread = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)RxPipe, nullptr, 0, nullptr);
-    hNetTCPThread = StartNetTCPLoopThread(DEFAULT_PORT);
+    if (!AquireShutdownPrivilege())
+    {
+        logger.error("Unable to aquire shutdown privilege, exiting");
+        return;
+    }
+    else
+    {
+        logger.debug("Shutdown privilege aquired");
+    }
+
+
     logger.debug("Starting pipe thread...");
     hRxPipeThread = CreateThread(nullptr, 0U, (LPTHREAD_START_ROUTINE)RxPipe, nullptr, 0U, nullptr);
 
@@ -50,6 +59,7 @@ void ServiceLoop(bool debugging)
     logger.debug("Service running");
 
     // Wait for stop event
+    g_StopEvent = CreateEvent(nullptr, true, false, nullptr);
     WaitForSingleObject(g_StopEvent, INFINITE);
 }
 
@@ -254,20 +264,19 @@ std::string MessageRecieved(const char* message, in_addr ip)
 
                 logger.info(" -> User not logged in");
 
-                // get shutdown priv
-                if (!EnableShutdownPrivNT())
-                {
-                    logFile->addTmpEntry(" -> Failed to achieve ShutdownPriv -> ABORT\n");
-                    logFile->writeTmpEntry();
-                    return std::string("FAILED");
-                }
+                //// get shutdown priv
+                //if (!EnableShutdownPrivNT())
+                //{
+                //    logFile->addTmpEntry(" -> Failed to achieve ShutdownPriv -> ABORT\n");
+                //    logFile->writeTmpEntry();
+                //    return std::string("FAILED");
+                //}
 
                 //logFile->addTmpEntry(" -> ShutdownPriv achieved");
 
                 // Shutdown pc
                 ExitWindowsEx(EWX_POWEROFF | EWX_FORCEIFHUNG, 0);
                 logger.info(" -> Shutdown performed");
-                logFile->writeTmpEntry();
                 return std::string("1");
             }
             else
@@ -318,15 +327,15 @@ std::string MessageRecieved(const char* message, in_addr ip)
                     logger.info(" -> User not logged on");
                 }
 
-                // get shutdown priv
-                if (!EnableShutdownPrivNT())
-                {
-                    logFile->addTmpEntry(" -> Failed to achieve ShutdownPriv -> ABORT\n");
-                    logFile->writeTmpEntry();
-                    return std::string("FAILED");
-                }
+                //// get shutdown priv
+                //if (!EnableShutdownPrivNT())
+                //{
+                //    logFile->addTmpEntry(" -> Failed to achieve ShutdownPriv -> ABORT\n");
+                //    logFile->writeTmpEntry();
+                //    return std::string("FAILED");
+                //}
 
-                logFile->addTmpEntry(" -> ShutdownPriv achieved");
+                //logFile->addTmpEntry(" -> ShutdownPriv achieved");
 
                 // Shutdown pc
                 ExitWindowsEx(EWX_POWEROFF | EWX_FORCEIFHUNG, 0);
@@ -515,9 +524,8 @@ bool isRemoteUserLoggedIn()
     PWTS_SESSION_INFO ppSessionInfo = nullptr;
     DWORD pCount;
 
-    BOOL bRet = WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &ppSessionInfo, &pCount);
-
-    if (!bRet)
+    auto result = WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &ppSessionInfo, &pCount);
+    if (!result)
     {
         return false;
     }
@@ -535,37 +543,34 @@ bool isRemoteUserLoggedIn()
 
 bool isUserLoggedOn()
 {
-    HANDLE hToken = nullptr;
-    HANDLE hDupToken = nullptr;
+    HANDLE token = nullptr;
+    HANDLE dupplicatedToken = nullptr;
 
     // Get the user of the "active" session
-    DWORD dwSessionId = WTSGetActiveConsoleSessionId();
-
-    if (0xFFFFFFFF == dwSessionId)
+    auto dwSessionId = WTSGetActiveConsoleSessionId();
+    if (dwSessionId == 0xFFFFFFFF)
     {
         // there is no active session
         return false;
     }
 
-    BOOL ret = WTSQueryUserToken(dwSessionId, &hToken);
-
-    if (nullptr == hToken)
+    auto ret = WTSQueryUserToken(dwSessionId, &token);
+    if (token == nullptr)
     {
         // function call failed
+        // TODO
         return false;
     }
 
-    DuplicateToken(hToken, SecurityImpersonation, &hDupToken);
-
-    if (nullptr == hDupToken)
+    DuplicateToken(token, SecurityImpersonation, &dupplicatedToken);
+    if (dupplicatedToken == nullptr)
     {
-        CloseHandle(hToken);
+        CloseHandle(token);
         return false;
     }
 
-    BOOL bRes = ImpersonateLoggedOnUser(hDupToken);
-
-    if (bRes)
+    auto result = ImpersonateLoggedOnUser(dupplicatedToken);
+    if (result)
     {
         // Get the username bRes = GetUserNameA(szTempBuf, &dwBufSize);
         // stop impersonating the user
@@ -573,42 +578,40 @@ bool isUserLoggedOn()
         return true;
     }
 
-    CloseHandle(hDupToken);
-    CloseHandle(hToken);
+    CloseHandle(dupplicatedToken);
+    CloseHandle(token);
 
     return false;
 }
 
-
-bool EnableShutdownPrivNT()
+/**
+ * Acquire the privilege for shutting down the pc
+ * @return True if the privilege could be acquired, false otherwise
+ */
+bool AquireShutdownPrivilege()
 {
-    HANDLE hToken;
-    LUID DebugValue;
-    TOKEN_PRIVILEGES tkp;
+    HANDLE token;
+    LUID luid;    
 
     // Retrieve a handle of the access token
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
     {
         return false;
     }
 
-    // Enable the SE_DEBUG_NAME privilege
-    if (!LookupPrivilegeValue((LPSTR)nullptr, SE_SHUTDOWN_NAME, &DebugValue))
+    // Aquire the SE_SHUTDOWN_NAME privilege
+    if (!LookupPrivilegeValue((LPSTR)nullptr, SE_SHUTDOWN_NAME, &luid))
     {
         return false;
     }
 
+    TOKEN_PRIVILEGES tkp;
     tkp.PrivilegeCount = 1;
-    tkp.Privileges[0].Luid = DebugValue;
+    tkp.Privileges[0].Luid = luid;
     tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
-    AdjustTokenPrivileges(hToken, FALSE, &tkp, sizeof(TOKEN_PRIVILEGES), (PTOKEN_PRIVILEGES)nullptr, (PDWORD)nullptr);
+    AdjustTokenPrivileges(token, FALSE, &tkp, sizeof(TOKEN_PRIVILEGES), (PTOKEN_PRIVILEGES)nullptr, (PDWORD)nullptr);
 
     // The return value of AdjustTokenPrivileges can't be tested
-    if (GetLastError() != ERROR_SUCCESS)
-    {
-        return false;
-    }
-
-    return true;
+    return GetLastError() == ERROR_SUCCESS;
 }

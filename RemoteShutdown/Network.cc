@@ -6,9 +6,9 @@ int iUDPPort;
 HANDLE StartNetTCPLoopThread(int port)
 {
 	iTCPPort = port;
-	//return CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)netTCPLoop, NULL, 0, NULL);
-	netTCPLoop(NULL);
-	return 0;
+	return CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)netTCPLoop, NULL, 0, NULL);
+	//netTCPLoop(NULL);
+	//return 0;
 }
 
 DWORD netTCPLoop(LPVOID lpParameter)
@@ -49,7 +49,7 @@ DWORD netTCPLoop(LPVOID lpParameter)
 		return 4;
 	}
 
-	string message;
+	std::string message;
 
 	// Endlos auf neue Verbindugen warten
 	while (true)
