@@ -11,4 +11,4 @@ if ($installationPath -and (test-path "$installationPath\Common7\Tools\vsdevcmd.
   }
 }
 
-msbuild /maxcpucount /p:Configuration=Release /p:Platform=x64 #/target:Rebuild
+msbuild /nologo /verbosity:minimal /maxcpucount /p:Configuration=Release /p:Platform=x64 #/target:Rebuild
