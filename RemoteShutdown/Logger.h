@@ -16,7 +16,7 @@ public:
 	explicit Logger(std::string const &name);
 	~Logger();
 
-    void Init(bool debugging);
+    void Init(bool debugging) noexcept;
 
     void debug(std::string const &message);
     void info(std::string const &message);

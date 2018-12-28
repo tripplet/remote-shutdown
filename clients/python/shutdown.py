@@ -27,7 +27,6 @@ def shutdown(host, port, secret, force, socket_timeout):
     """Send shutdown command to the specified host"""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.settimeout(socket_timeout)
-
         try:
             # connect, request the challenge and send the signed response
             s.connect((host, port))
