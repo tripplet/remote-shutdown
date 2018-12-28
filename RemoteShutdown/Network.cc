@@ -109,7 +109,7 @@ DWORD netTCPLoop(LPVOID lpParameter)
 					message.clear();
 
 					auto response = MessageRecieved(tmp.c_str(), connected_client.sin_addr);
-                    send(connectedSocket, response.c_str(), static_cast<int>(response.length()), 0U);
+                    send(connectedSocket, (response + "\n").c_str(), static_cast<int>(response.length() + 1), 0U);
 				}
 			}
 		} while (data_len > 0);
