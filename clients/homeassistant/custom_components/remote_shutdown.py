@@ -18,7 +18,7 @@ REMOTE_SHUTDOWN_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_ACCESS_TOKEN): cv.string,
     vol.Optional(CONF_FORCE, default=True): cv.boolean,
-    vol.Optional(CONF_TIMEOUT, default=1.0): cv.socket_timeout,
+    vol.Optional(CONF_TIMEOUT, default=3.0): cv.socket_timeout,
     vol.Optional(CONF_PORT, default=10102): cv.port
 })
 
@@ -37,29 +37,29 @@ def setup(hass, config):
         else:
             cmd = 'shutdown'
         message = f'{cmd}.{challenge}'.encode('ascii')
-        hash = hmac.new(key.encode('ascii'), message, hashlib.sha256)
-        return f'{cmd}.{hash.hexdigest()}'
+        hashed_message = hmac.new(key.encode('ascii'), message, hashlib.sha256)
+        return f'{cmd}.{hashed_message.hexdigest()}'
 
     def shutdown(host, port, secret, force, socket_timeout):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(socket_timeout)
+        """Send shutdown command to the specified host"""
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(socket_timeout)
 
-        try:
-            # connect, request the challenge and send the signed response
-            s.connect((host, port))
-            s.send(b'request_challange\n')
-            challenge = s.recv(2048).decode('ascii')
-            response = authenticated_response(challenge, secret, force)
-            s.send((response + '\n').encode('ascii'))
-            result = s.recv(2048).decode('ascii')
-            if result == '1':
-                return True, None
-            else:
+            try:
+                # connect, request the challenge and send the signed response
+                s.connect((host, port))
+                s.send(b'request_challange\n')
+                challenge = s.recv(2048).decode('ascii')
+                response = authenticated_response(challenge, secret, force)
+                s.send((response + '\n').encode('ascii'))
+                result = s.recv(2048).decode('ascii')
+                if result == '1':
+                    return True, None
                 return False, result
-        except Exception as exp:
+            except Exception as exp:
                 return False, str(exp)
-        finally:
-            s.close()
+            finally:
+                s.close()
 
     def send(call):
         """Send the shutdown command"""
