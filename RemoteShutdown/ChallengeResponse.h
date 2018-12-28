@@ -7,12 +7,12 @@
 
 class CChallengeResponse
 {
-  public:
-    static std::string createChallange();
+private:
+    static char *generateRandom(unsigned int len);
+
+public:
+    static const std::string createChallange();
     static bool verifyResponse(std::string const &challange, std::string const &secret, std::string const &response);
 
-  private:
-    static char *generateRandom(unsigned int len);
-    static std::string hash(const char* input, unsigned int len);
 };
 

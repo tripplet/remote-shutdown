@@ -28,7 +28,7 @@ void ServiceLoop(bool debugging)
     logger.Init(debugging);
 
     // Initialize TCP for windows (winsock)
-    WSADATA wsaData;
+    WSADATA wsaData{};
     auto const err = WSAStartup(MAKEWORD(2, 2), &wsaData);
 
     if (err != 0)
@@ -43,7 +43,7 @@ void ServiceLoop(bool debugging)
 
     if (!AquireShutdownPrivilege())
     {
-        logger.error("Unable to aquire shutdown privilege, exiting");
+        logger.error("Unable to aquire neccessary privileges, exiting");
         return;
     }
     else
@@ -58,10 +58,16 @@ void ServiceLoop(bool debugging)
     logger.debug("Starting tcp thread...");
     hNetTCPThread = StartNetTCPLoopThread(DEFAULT_PORT);
 
-    logger.debug("Service running");
 
     // Wait for stop event
     g_StopEvent = CreateEvent(nullptr, true, false, nullptr);
+    if (g_StopEvent == nullptr)
+    {
+        logger.error("Unable to create wait event, exiting");
+        return;
+    }
+
+    logger.debug("Service running");
     WaitForSingleObject(g_StopEvent, INFINITE);
 }
 
@@ -144,16 +150,16 @@ DWORD RxPipe(LPVOID lpParameter)
                 break;
             }
 
-            ProtectedStorage store(string(PROG_NAME));
-            string result;
+            ProtectedStorage store(std::string(PROG_NAME));
+            std::string result;
 
-            if (store.save(string("token"), string(pchRequest)))
+            if (store.save(std::string("token"), std::string(pchRequest)))
             {
-                result = string("Secret successfully saved");
+                result = std::string("Secret successfully saved");
             }
             else
             {
-                result = string("Failed to save secret");
+                result = std::string("Failed to save secret");
             }
 
             strcpy_s(pchReply, PIPE_BUFFER_SIZE, TEXT(result.c_str()));
@@ -198,6 +204,7 @@ static bool starts_with(const std::string str, const std::string prefix)
 const std::string MessageRecieved(std::string const &message, in_addr ip)
 {
     ProtectedStorage store(std::string(PROG_NAME));
+    auto secret = store.read("token");
 
     if (message.length() == 0)
     {
@@ -231,7 +238,6 @@ const std::string MessageRecieved(std::string const &message, in_addr ip)
     if (starts_with(message, "shutdown."))
     {
         std::string ret;
-        std::string secret = store.read(string("token"));
 
         if (secret.compare("") == 0)
         {
@@ -293,7 +299,6 @@ const std::string MessageRecieved(std::string const &message, in_addr ip)
     if (starts_with(message, "admin_shutdown."))
     {
         std::string ret;
-        std::string secret = store.read(string("data"));
 
         if (secret.compare("") == 0)
         {
@@ -354,7 +359,7 @@ const std::string MessageRecieved(std::string const &message, in_addr ip)
     return "unknown command";
 }
 
-void setSecret(string &secret)
+void setSecret(std::string const &secret)
 {
     HANDLE hPipe;
     TCHAR  chBuf[PIPE_BUFFER_SIZE];
@@ -587,7 +592,7 @@ bool isUserLoggedOn()
  */
 bool AquireShutdownPrivilege()
 {
-    HANDLE token;
+    HANDLE token = nullptr;
     LUID luid;
 
     // Retrieve a handle of the access token
@@ -596,7 +601,7 @@ bool AquireShutdownPrivilege()
         return false;
     }
 
-    // Aquire the SE_SHUTDOWN_NAME privilege
+    // Lookup the SE_SHUTDOWN_NAME privilege
     if (!LookupPrivilegeValue((LPSTR)nullptr, SE_SHUTDOWN_NAME, &luid))
     {
         return false;

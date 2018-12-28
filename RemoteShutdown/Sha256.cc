@@ -10,30 +10,11 @@
 
 namespace sha256
 {
-    std::string GetLastErrorMessage();
-
-    //bool constant_time_compare(const void *a, const void *b, const size_t size)
-    //{
-    //    if (a == nullptr || b == nullptr)
-    //    {
-    //        return false;
-    //    }
-
-    //    auto _a = reinterpret_cast<const unsigned char*>(a);
-    //    auto _b = reinterpret_cast<const unsigned char*>(b);
-
-    //    unsigned char result = 0;
-    //    for (size_t i = 0; i < size; i++)
-    //    {
-    //        result |= _a[i] ^ _b[i];
-    //    }
-
-    //    return result == 0;
-    //}
+    const std::string GetLastErrorMessage();
 
     bool constant_time_compare(std::string const &value1, std::string const &value2)
     {
-        if (value1.size() != value2.size())
+        if (value1.size() != value2.size() || value1.size() == 0)
         {
             return false;
         }
@@ -52,10 +33,10 @@ namespace sha256
      * @param data The byte array
      * @return The hex string
      */
-    std::string ToHex(std::vector<byte> const &data)
+    const std::string ToHex(std::vector<byte> const &byteArray)
     {
         std::stringstream hashString;
-        for each (const int value in data)
+        for each (const int value in byteArray)
         {
             hashString << std::setfill('0') << std::setw(2) << std::hex << value;
         }
@@ -212,27 +193,26 @@ namespace sha256
 
     /**
      * Retrieve the system error message for the last-error code
+     * @return String error message for the last-error code
      */
-    std::string GetLastErrorMessage()
+    const std::string GetLastErrorMessage()
     {
         // Retrieve the system error message for the last-error code
-        auto lastError = GetLastError();
+        const auto lastError = GetLastError();
 
         if (lastError == 0)
         {
             return "No Error";
         }
 
-        void* errorString;
+        void* errorString = nullptr;
         FormatMessage(
-            FORMAT_MESSAGE_ALLOCATE_BUFFER |
-            FORMAT_MESSAGE_FROM_SYSTEM |
-            FORMAT_MESSAGE_IGNORE_INSERTS,
-            NULL,
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+            nullptr,
             lastError,
             MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-            (LPTSTR)&errorString,
-            0, NULL);
+            reinterpret_cast<LPTSTR>(&errorString),
+            0U, nullptr);
 
         if (errorString == nullptr)
         {
@@ -240,7 +220,7 @@ namespace sha256
         }
 
         std::stringstream errorMessage;
-        errorMessage << "Error " << lastError << ": " << (LPTSTR)errorString;
+        errorMessage << "Error " << lastError << ": " << static_cast<LPTSTR>(errorString);
 
         LocalFree(errorString);
         return errorMessage.str();

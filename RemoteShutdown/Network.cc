@@ -1,27 +1,35 @@
 #include "Network.h"
+#include "GlobalConst.h"
+#include "RemoteShutdown.h"
 
+#include <winsock.h>
+#include <string>
+#include <exception>
 
 extern Logger logger;
+
 int tcpPort;
 HANDLE networkThread = nullptr;
+
+DWORD netTCPLoop(LPVOID lpParameter);
 
 HANDLE StartNetTCPLoopThread(int port)
 {
     if (networkThread != nullptr)
     {
         logger.error("TCP network thread already running");
-        return 0;
+        return nullptr;
     }
 
     tcpPort = port;
-    networkThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)netTCPLoop, NULL, 0, NULL);
+    networkThread = CreateThread(nullptr, 0U, (LPTHREAD_START_ROUTINE)netTCPLoop, nullptr, 0U, nullptr);
     return networkThread;
 }
 
 DWORD netTCPLoop(LPVOID lpParameter)
 {
     // Create server socket
-    auto acceptSocket = socket(AF_INET, SOCK_STREAM, 0);
+    const auto acceptSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (acceptSocket == INVALID_SOCKET)
     {
         logger.error("Error creating socket");
@@ -30,8 +38,7 @@ DWORD netTCPLoop(LPVOID lpParameter)
         return -1;
     }
 
-    struct sockaddr_in server;
-    memset(&server, 0, sizeof(sockaddr_in));
+    struct sockaddr_in server{};
     server.sin_family = AF_INET;
     server.sin_port = htons(tcpPort);
     server.sin_addr.s_addr = INADDR_ANY;
@@ -60,11 +67,11 @@ DWORD netTCPLoop(LPVOID lpParameter)
 	while (true)
 	{
         std::string message = "";
-        struct sockaddr_in connected_client;
+        struct sockaddr_in connected_client{};
         int client_len = sizeof(connected_client);
 
 		// Wait for client to connect
-        auto connectedSocket = accept(acceptSocket, reinterpret_cast<sockaddr*>(&connected_client), &client_len);
+        const auto connectedSocket = accept(acceptSocket, reinterpret_cast<sockaddr*>(&connected_client), &client_len);
 		if (connectedSocket == INVALID_SOCKET)
 		{
             logger.error(std::string("Error accepting client connection: ") + std::to_string(WSAGetLastError()));
@@ -96,7 +103,7 @@ DWORD netTCPLoop(LPVOID lpParameter)
 
 				auto index = message.find("\n");
 
-				if (index != string::npos)
+				if (index != std::string::npos)
 				{
 					auto tmp = message.substr(0, index);
 					message.clear();

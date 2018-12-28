@@ -14,7 +14,7 @@ namespace sha256
     std::shared_ptr<std::vector<byte> const> HashHMAC(std::vector<byte> const &key, std::vector<byte> const &message);
     std::shared_ptr<std::vector<byte> const> HashHMAC(std::string const &key, std::string const &message);
 
-    std::string ToHex(std::vector<byte> const &data);
+    const std::string ToHex(std::vector<byte> const &data);
 
     bool constant_time_compare(std::string const &value1, std::string const &value2);
 };

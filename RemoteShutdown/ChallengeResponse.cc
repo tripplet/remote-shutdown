@@ -2,7 +2,7 @@
 
 #include "sha256.h"
 
-std::string CChallengeResponse::createChallange()
+const std::string CChallengeResponse::createChallange()
 {
     std::unique_ptr<char> random(generateRandom(RANDOM_LEN));
 
@@ -16,13 +16,13 @@ std::string CChallengeResponse::createChallange()
 
 bool CChallengeResponse::verifyResponse(std::string const &challenge, std::string const &secret, std::string const &response)
 {
-    auto index = response.find(".");
+    const auto index = response.find(".");
     if (index == std::string::npos)
     {
         return false;
     }
 
-    auto command = response.substr(0U, index);
+    const auto command = response.substr(0U, index);
     auto valid_response = sha256::ToHex(*sha256::HashHMAC(secret, command + "." + challenge));
 
     return (sha256::constant_time_compare(command + "." + valid_response, response));
