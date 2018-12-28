@@ -1,4 +1,9 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
+Created on 2018-12-28
+@author: Tobias Tangemann
+
 Script for shuting down windows pc
 """
 import socket

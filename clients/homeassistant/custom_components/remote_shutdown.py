@@ -1,4 +1,9 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
+Created on 2018-12-28
+@author: Tobias Tangemann
+
 Component for shuting down windows pc
 """
 import logging
@@ -69,13 +74,13 @@ def setup(hass, config):
         force = call.data.get(CONF_FORCE)
         socket_timeout = call.data.get(CONF_TIMEOUT)
 
-        _LOGGER.info(f'Trying shutdown of {host}')
+        _LOGGER.info('Trying shutdown of %s', host)
         result, error = shutdown(host, port, secret, force, socket_timeout)
 
         if result:
             _LOGGER.info('Shutdown successful')
         else:
-            _LOGGER.error(f'Error during send shutdown: {error}')
+            _LOGGER.error('Error during send shutdown: %s', error)
 
     hass.services.register(DOMAIN, 'send', send, schema=REMOTE_SHUTDOWN_SCHEMA)
     return True

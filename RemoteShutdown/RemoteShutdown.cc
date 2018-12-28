@@ -11,7 +11,7 @@ std::string lastChallange;
 time_t lastChallangeTime;
 
 // Functions
-bool AquireShutdownPrivilege();
+bool AquirePrivileges();
 bool isUserLoggedOn();
 bool isRemoteUserLoggedIn();
 DWORD RxPipe(LPVOID lpParameter);
@@ -41,7 +41,7 @@ void ServiceLoop(bool debugging)
         logger.debug("Winsock initialized");
     }
 
-    if (!AquireShutdownPrivilege())
+    if (!debugging && !AquirePrivileges())
     {
         logger.error("Unable to aquire neccessary privileges, exiting");
         return;
@@ -587,13 +587,12 @@ bool isUserLoggedOn()
 
 
 /**
- * Acquire the privilege for shutting down the pc
- * @return True if the privilege could be acquired, false otherwise
+ * Acquire the privileges
+ * @return True if the privileges could be acquired, false otherwise
  */
-bool AquireShutdownPrivilege()
+bool AquirePrivileges()
 {
     HANDLE token = nullptr;
-    LUID luid;
 
     // Retrieve a handle of the access token
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
@@ -602,17 +601,31 @@ bool AquireShutdownPrivilege()
     }
 
     // Lookup the SE_SHUTDOWN_NAME privilege
-    if (!LookupPrivilegeValue((LPSTR)nullptr, SE_SHUTDOWN_NAME, &luid))
+    LUID luid_shutdown;
+    if (!LookupPrivilegeValue(nullptr, SE_SHUTDOWN_NAME, &luid_shutdown))
     {
         return false;
     }
 
-    TOKEN_PRIVILEGES tkp;
-    tkp.PrivilegeCount = 1;
-    tkp.Privileges[0].Luid = luid;
-    tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+    // Lookup the SE_TCB_NAME privilege
+    LUID luid_tcb;
+    if (!LookupPrivilegeValue(nullptr, SE_TCB_NAME, &luid_tcb))
+    {
+        return false;
+    }
 
-    AdjustTokenPrivileges(token, FALSE, &tkp, sizeof(TOKEN_PRIVILEGES), (PTOKEN_PRIVILEGES)nullptr, (PDWORD)nullptr);
+    auto sizeof_tkp = FIELD_OFFSET(TOKEN_PRIVILEGES, Privileges[2]);
+    auto tkp = static_cast<TOKEN_PRIVILEGES*>(std::malloc(sizeof_tkp));
+
+    tkp->PrivilegeCount = 2;
+    tkp->Privileges[0].Luid = luid_shutdown;
+    tkp->Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+    tkp->Privileges[1].Luid = luid_tcb;
+    tkp->Privileges[1].Attributes = SE_PRIVILEGE_ENABLED;
+
+    AdjustTokenPrivileges(token, false, tkp, sizeof_tkp, PTOKEN_PRIVILEGES{ nullptr }, PDWORD{ nullptr });
+
+    std::free(tkp);
 
     // The return value of AdjustTokenPrivileges can't be tested
     return GetLastError() == ERROR_SUCCESS;
