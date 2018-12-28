@@ -28,8 +28,6 @@ void WINAPI ServiceMain(DWORD argc, LPTSTR *argv)
 		return;
 	}
 
-	g_StopEvent = CreateEvent(nullptr, true, false, nullptr);
-
 	serviceStatus.dwCurrentState = SERVICE_RUNNING;
 	serviceStatus.dwCheckPoint = 0;
 	serviceStatus.dwWaitHint = 0;

@@ -1,26 +1,25 @@
 #include "RemoteShutdown.h"
 
+#include <iostream>
+#include <ctime>
+#include <algorithm>
+#include <string>
+
 HANDLE g_StopEvent;
 Logger logger(PROG_NAME);
 
-HANDLE hNetTCPThread;
-HANDLE hNetUDPThread;
-HANDLE hRxPipeThread;
+HANDLE tcpThread;
+HANDLE rxPipeThread;
 
-std::string lastChallange;
+std::string lastChallange = "";
 time_t lastChallangeTime;
 
 // Functions
 bool AquirePrivileges();
 bool isUserLoggedOn();
 bool isRemoteUserLoggedIn();
+void InitiateShutdown(unsigned long timeout, bool forceAppsClosed) noexcept;
 DWORD RxPipe(LPVOID lpParameter);
-
-#include <iostream>
-#include <ctime>
-#include <algorithm>
-#include <string>
-
 
 void ServiceLoop(bool debugging)
 {
@@ -53,11 +52,10 @@ void ServiceLoop(bool debugging)
 
 
     logger.debug("Starting pipe thread...");
-    hRxPipeThread = CreateThread(nullptr, 0U, (LPTHREAD_START_ROUTINE)RxPipe, nullptr, 0U, nullptr);
+    rxPipeThread = CreateThread(nullptr, 0U, (LPTHREAD_START_ROUTINE)RxPipe, nullptr, 0U, nullptr);
 
     logger.debug("Starting tcp thread...");
-    hNetTCPThread = StartNetTCPLoopThread(DEFAULT_PORT);
-
+    tcpThread = StartNetTCPLoopThread(DEFAULT_PORT);
 
     // Wait for stop event
     g_StopEvent = CreateEvent(nullptr, true, false, nullptr);
@@ -73,8 +71,8 @@ void ServiceLoop(bool debugging)
 
 void ServiceQuit()
 {
-    TerminateThread(hNetTCPThread, 0);
-    TerminateThread(hRxPipeThread, 0);
+    TerminateThread(tcpThread, 0);
+    TerminateThread(rxPipeThread, 0);
 }
 
 DWORD RxPipe(LPVOID lpParameter)
@@ -206,7 +204,7 @@ const std::string MessageRecieved(std::string const &message, in_addr ip)
     ProtectedStorage store(std::string(PROG_NAME));
     auto secret = store.read("token");
 
-    if (message.length() == 0)
+    if (message.empty())
     {
         return "";
     }
@@ -218,9 +216,7 @@ const std::string MessageRecieved(std::string const &message, in_addr ip)
     {
         return "pong";
     }
-
-    // challenge request
-    if (message == "request_challange")
+    else if (message == "request_challange")
     {
         lastChallange = CChallengeResponse::createChallange();
 
@@ -230,130 +226,65 @@ const std::string MessageRecieved(std::string const &message, in_addr ip)
             return std::string("internal error");
         }
 
-        lastChallangeTime = time(NULL);
+        lastChallangeTime = time(nullptr);
         return lastChallange;
     }
-
-    // shutdown
-    if (starts_with(message, "shutdown."))
+    else if (starts_with(message, "shutdown.") || starts_with(message, "admin_shutdown"))
     {
-        std::string ret;
-
-        if (secret.compare("") == 0)
+        if (secret.empty())
         {
             logger.error("No valid secret found");
+
+            lastChallange.clear();
             return std::string("no token configured in service");
         }
 
-        if (!lastChallange.empty() && CChallengeResponse::verifyResponse(lastChallange, secret, message))
-        {
-            secret.erase();
+        auto is_admin_shutdown = starts_with(message, "admin_shutdown");
+        auto validResponse = !lastChallange.empty() && CChallengeResponse::verifyResponse(lastChallange, secret, message);
 
-            if (difftime(time(NULL), lastChallangeTime) <= RESPONSE_LIMIT)
+        lastChallange.clear();
+        secret.erase();
+
+        if (validResponse)
+        {
+            if (difftime(time(nullptr), lastChallangeTime) <= RESPONSE_LIMIT)
             {
-                logger.info("Shutdown command recognized");
+                logger.info("Valid shutdown command received");
 
                 if (isUserLoggedOn())
                 {
-                    logger.info(" -> User logged in -> ABORT\n");
-                    return std::string("USER_LOGGEDIN");
+                    logger.info("User logged in");
+
+                    if (!is_admin_shutdown)
+                    {
+                        return std::string("active user logged in");
+                    }
                 }
 
                 if (isRemoteUserLoggedIn())
                 {
-                    logger.info(" -> RemoteUser logged in -> ABORT\n");
-                    return std::string("USER_LOGGEDIN");
+                    logger.info("Remote user logged in");
+
+                    if (!is_admin_shutdown)
+                    {
+                        return std::string("active user logged in");
+                    }
                 }
 
-                logger.info(" -> User not logged in");
-
-                //// get shutdown priv
-                //if (!EnableShutdownPrivNT())
-                //{
-                //    logFile->addTmpEntry(" -> Failed to achieve ShutdownPriv -> ABORT\n");
-                //    logFile->writeTmpEntry();
-                //    return std::string("FAILED");
-                //}
-
-                //logFile->addTmpEntry(" -> ShutdownPriv achieved");
-
                 // Shutdown pc
-                ExitWindowsEx(EWX_POWEROFF | EWX_FORCEIFHUNG, 0);
-                logger.info(" -> Shutdown performed");
-                return std::string("1");
+                InitiateShutdown(30, true);
+                logger.info("Shutdown performed");
+                return "1";
             }
             else
             {
-                ret = std::string("slow");
+                return "challenge response to slow";
             }
         }
         else
         {
-            ret = std::string("invalid");
+            return "invalid command";
         }
-
-        lastChallange.clear();
-        return ret;
-    }
-
-    if (starts_with(message, "admin_shutdown."))
-    {
-        std::string ret;
-
-        if (secret.compare("") == 0)
-        {
-            logger.error("No valid secret found");
-            return std::string("no token configured in service");
-        }
-
-        if (!lastChallange.empty() && CChallengeResponse::verifyResponse(lastChallange, secret, message))
-        {
-            secret.erase();
-
-            if (difftime(time(NULL), lastChallangeTime) <= RESPONSE_LIMIT)
-            {
-                logger.info("Admin Shutdown command recognized");
-
-                if (isUserLoggedOn())
-                {
-                    logger.info(" -> User logged in");
-                }
-                else if (isRemoteUserLoggedIn())
-                {
-                    logger.info(" -> RemoteUser logged in");
-                }
-                else
-                {
-                    logger.info(" -> User not logged on");
-                }
-
-                //// get shutdown priv
-                //if (!EnableShutdownPrivNT())
-                //{
-                //    logFile->addTmpEntry(" -> Failed to achieve ShutdownPriv -> ABORT\n");
-                //    logFile->writeTmpEntry();
-                //    return std::string("FAILED");
-                //}
-
-                //logFile->addTmpEntry(" -> ShutdownPriv achieved");
-
-                // Shutdown pc
-                ExitWindowsEx(EWX_POWEROFF | EWX_FORCEIFHUNG, 0);
-                logger.info(" -> AdminShutdown performed\n");
-                return std::string("1");
-            }
-            else
-            {
-                ret = std::string("slow");
-            }
-        }
-        else
-        {
-            ret = std::string("invalid");
-        }
-
-        lastChallange.clear();
-        return ret;
     }
 
     return "unknown command";
@@ -585,6 +516,14 @@ bool isUserLoggedOn()
     return false;
 }
 
+/**
+ * Shutdown pc
+ */
+void InitiateShutdown(unsigned long timeout, bool forceAppsClosed) noexcept
+{
+    InitiateSystemShutdownEx(nullptr, "Remote system shutdown requested.", timeout, forceAppsClosed, false, SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER | SHTDN_REASON_FLAG_PLANNED);
+}
+
 
 /**
  * Acquire the privileges
@@ -615,7 +554,7 @@ bool AquirePrivileges()
     }
 
     auto sizeof_tkp = FIELD_OFFSET(TOKEN_PRIVILEGES, Privileges[2]);
-    auto tkp = static_cast<TOKEN_PRIVILEGES*>(std::malloc(sizeof_tkp));
+    auto tkp = reinterpret_cast<TOKEN_PRIVILEGES*>(new byte[sizeof_tkp]);
 
     tkp->PrivilegeCount = 2;
     tkp->Privileges[0].Luid = luid_shutdown;
@@ -625,7 +564,7 @@ bool AquirePrivileges()
 
     AdjustTokenPrivileges(token, false, tkp, sizeof_tkp, PTOKEN_PRIVILEGES{ nullptr }, PDWORD{ nullptr });
 
-    std::free(tkp);
+    delete tkp;
 
     // The return value of AdjustTokenPrivileges can't be tested
     return GetLastError() == ERROR_SUCCESS;

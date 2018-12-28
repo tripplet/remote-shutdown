@@ -23,7 +23,6 @@ REMOTE_SHUTDOWN_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_ACCESS_TOKEN): cv.string,
     vol.Optional(CONF_FORCE, default=True): cv.boolean,
-    vol.Optional(CONF_TIMEOUT, default=3.0): cv.socket_timeout,
     vol.Optional(CONF_PORT, default=10102): cv.port
 })
 
@@ -71,10 +70,9 @@ def setup(hass, config):
         port = call.data.get(CONF_PORT)
         secret = call.data.get(CONF_ACCESS_TOKEN)
         force = call.data.get(CONF_FORCE)
-        socket_timeout = call.data.get(CONF_TIMEOUT)
 
         _LOGGER.info('Trying shutdown of %s', host)
-        result, error = shutdown(host, port, secret, force, socket_timeout)
+        result, error = shutdown(host, port, secret, force, 10.0)
 
         if result:
             _LOGGER.info('Shutdown successful')
