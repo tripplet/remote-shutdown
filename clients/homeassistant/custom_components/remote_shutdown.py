@@ -42,28 +42,28 @@ def setup(hass, config):
         else:
             cmd = 'shutdown'
         message = f'{cmd}.{challenge}'.encode('ascii')
-        hashed_message = hmac.new(key.encode('ascii'), message, hashlib.sha256)
-        return f'{cmd}.{hashed_message.hexdigest()}'
+        mac = hmac.new(key.encode('ascii'), message, hashlib.sha256)
+        return f'{cmd}.{mac.hexdigest()}'
 
     def shutdown(host, port, secret, force, socket_timeout):
         """Send shutdown command to the specified host"""
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(socket_timeout)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conn:
+            conn.settimeout(socket_timeout)
             try:
                 # connect, request the challenge and send the signed response
-                s.connect((host, port))
-                s.send(b'request_challange\n')
-                challenge = s.recv(2048).decode('ascii')
+                conn.connect((host, port))
+                conn.send(b'request_challange\n')
+                challenge = conn.recv(2048).decode('ascii').strip()
                 response = authenticated_response(challenge, secret, force)
-                s.send((response + '\n').encode('ascii'))
-                result = s.recv(2048).decode('ascii')
+                conn.send((response + '\n').encode('ascii'))
+                result = conn.recv(2048).decode('ascii')
                 if result == '1':
                     return True, None
                 return False, result
             except Exception as exp:
                 return False, str(exp)
             finally:
-                s.close()
+                conn.close()
 
     def send(call):
         """Send the shutdown command"""
