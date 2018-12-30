@@ -1,13 +1,14 @@
-
 # Build artifacts
-RemoteShutdown/Release/*
-RemoteShutdown/Debug/*
 RemoteShutdown/x64/*
-Release/*
-Debug/*
+RemoteShutdown/win32/*
 x64/*
+win32/*
 .vs/*
 
+clients/go/*.exe
+clients/go/debug
+
+# Visual Studio files
 *.pdb
 *.ncb
 *.ilk
@@ -16,4 +17,5 @@ x64/*
 *.sdf
 *.vcxproj.user
 
+# Windows
 Thumbs.db
