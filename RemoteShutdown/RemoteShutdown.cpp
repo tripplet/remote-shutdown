@@ -1,5 +1,8 @@
 #include "RemoteShutdown.h"
 
+#include "Network.h"
+#include "ProtectedStorage.h"
+
 #include <iostream>
 #include <ctime>
 #include <algorithm>
@@ -319,10 +322,6 @@ int main(int argc, char **argv)
         else if (parameter == "--debug")
         {
             std::cout << "Debug running" << std::endl;
-
-            auto hash = sha256::ToHex(*sha256::HashHMAC(std::string("test"), std::string("abcdef")));
-            auto secret = CChallengeResponse::createChallange();
-
             ServiceLoop(true);
         }
         else if (parameter == "-s")

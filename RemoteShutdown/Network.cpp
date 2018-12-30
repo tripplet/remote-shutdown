@@ -95,7 +95,7 @@ DWORD netTCPLoop(LPVOID lpParameter)
                 {
                     if (buffer[i] == '\0')
                     {
-                        break;
+                        continue;
                     }
                 }
 
