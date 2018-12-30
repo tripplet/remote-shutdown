@@ -32,6 +32,20 @@ func main() {
 	flag.BoolVar(&config.verbose, "verbose", false, "Verbose mode")
 	flag.Parse()
 
+	// Create socket
+	d := net.Dialer{Timeout: time.Duration(config.timeout) * time.Second}
+	conn, err := d.Dial("tcp", fmt.Sprintf("%s:%d", config.host, config.port))
+	checkError(err)
+
+	// Request a challange
+	_, err = conn.Write([]byte("request_challange\n"))
+	checkError(err)
+
+	reader := bufio.NewReader(conn)
+	challange, err := reader.ReadString('\n')
+	checkError(err)
+	challange = strings.Trim(challange, "\n")
+
 	var command string
 	if config.force {
 		command = "admin_shutdown."
@@ -39,27 +53,11 @@ func main() {
 		command = "shutdown."
 	}
 
-	d := net.Dialer{Timeout: time.Duration(config.timeout) * time.Second}
-	conn, err := d.Dial("tcp", fmt.Sprintf("%s:%d", config.host, config.port))
+	// Send the response
+	_, err = conn.Write([]byte(command + authenticatedResponse(command+challange, config.token) + "\n"))
 	checkError(err)
 
-	_, err = conn.Write([]byte("request_challange\n"))
-	checkError(err)
-
-	reader := bufio.NewReader(conn)
-
-	challange, err := reader.ReadString('\n')
-	checkError(err)
-
-	challange = strings.Trim(challange, "\n")
-
-	mac := hmac.New(sha256.New, []byte(config.token))
-	mac.Write([]byte(command + challange))
-
-	responseMac := hex.EncodeToString(mac.Sum(nil))
-
-	_, err = conn.Write([]byte(command + responseMac + "\n"))
-
+	// Get result of command
 	result, err := reader.ReadString('\n')
 	checkError(err)
 
@@ -71,6 +69,12 @@ func main() {
 	} else {
 		os.Exit(1)
 	}
+}
+
+func authenticatedResponse(message string, key string) string {
+	mac := hmac.New(sha256.New, []byte(key))
+	mac.Write([]byte(message))
+	return hex.EncodeToString(mac.Sum(nil))
 }
 
 func checkError(err error) {
