@@ -22,9 +22,9 @@ type params struct {
 	verbose bool
 }
 
-var config params
-
 func main() {
+	var config params
+
 	flag.StringVar(&config.token, "token", "", "Shared secret")
 	flag.StringVar(&config.host, "host", "", "Adress/IP of windows pc")
 	flag.IntVar(&config.port, "port", 10102, "Port")

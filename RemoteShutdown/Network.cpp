@@ -49,7 +49,7 @@ DWORD netTCPLoop(LPVOID lpParameter)
     int rc = bind(acceptSocket, reinterpret_cast<sockaddr*>(&server), sizeof(sockaddr_in));
     if (rc == SOCKET_ERROR)
     {
-        logger.error("Error binding socket");
+        logger.error("Error binding to socket");
 
         networkThread = nullptr;
         return -1;
@@ -110,7 +110,7 @@ DWORD netTCPLoop(LPVOID lpParameter)
 					auto tmp = message.substr(0, index);
 					message.clear();
 
-					const auto response = Request::HandleMessage(tmp.c_str(), connected_client.sin_addr);
+					const auto response = Request::HandleMessage(tmp, connected_client.sin_addr);
                     send(connectedSocket, (response + "\n").c_str(), static_cast<int>(response.length() + 1), 0U);
 				}
 			}
