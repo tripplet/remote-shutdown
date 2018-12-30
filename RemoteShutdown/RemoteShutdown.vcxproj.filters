@@ -24,31 +24,40 @@
     <Filter Include="src\ChallengeResponse">
       <UniqueIdentifier>{22e0fa16-f745-4561-ae6b-9a5f3e08b828}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Request">
+      <UniqueIdentifier>{ca0aaa18-2a74-4d50-a1e7-2d9a1c598e2c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Sha256.cc">
+    <ClCompile Include="Base64.cpp">
+      <Filter>src\Request</Filter>
+    </ClCompile>
+    <ClCompile Include="Request.cpp">
+      <Filter>src\Request</Filter>
+    </ClCompile>
+    <ClCompile Include="ChallengeResponse.cpp">
       <Filter>src\ChallengeResponse</Filter>
     </ClCompile>
-    <ClCompile Include="ChallengeResponse.cc">
+    <ClCompile Include="Sha256.cpp">
       <Filter>src\ChallengeResponse</Filter>
     </ClCompile>
-    <ClCompile Include="RegHelper.cc">
-      <Filter>src\ProtectedStorage</Filter>
+    <ClCompile Include="Logger.cpp">
+      <Filter>src\Logging</Filter>
     </ClCompile>
-    <ClCompile Include="ProtectedStorage.cc">
-      <Filter>src\ProtectedStorage</Filter>
-    </ClCompile>
-    <ClCompile Include="RemoteShutdown.cc">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="Network.cc">
+    <ClCompile Include="Network.cpp">
       <Filter>src\Network</Filter>
     </ClCompile>
-    <ClCompile Include="ServiceHelper.cc">
+    <ClCompile Include="ProtectedStorage.cpp">
+      <Filter>src\ProtectedStorage</Filter>
+    </ClCompile>
+    <ClCompile Include="RegHelper.cpp">
+      <Filter>src\ProtectedStorage</Filter>
+    </ClCompile>
+    <ClCompile Include="ServiceHelper.cpp">
       <Filter>src\ServiceHelper</Filter>
     </ClCompile>
-    <ClCompile Include="Logger.cc">
-      <Filter>src\Logging</Filter>
+    <ClCompile Include="RemoteShutdown.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -81,6 +90,12 @@
     </ClInclude>
     <ClInclude Include="Logger.h">
       <Filter>src\Logging</Filter>
+    </ClInclude>
+    <ClInclude Include="Request.h">
+      <Filter>src\Request</Filter>
+    </ClInclude>
+    <ClInclude Include="Base64.h">
+      <Filter>src\Request</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

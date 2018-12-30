@@ -36,7 +36,6 @@ DWORD netTCPLoop(LPVOID lpParameter)
         logger.error("Error creating socket");
 
         networkThread = nullptr;
-        SetEvent(g_StopEvent);
         return -1;
     }
 
@@ -52,7 +51,6 @@ DWORD netTCPLoop(LPVOID lpParameter)
         logger.error("Error binding socket");
 
         networkThread = nullptr;
-        SetEvent(g_StopEvent);
         return -1;
     }
 
@@ -63,7 +61,6 @@ DWORD netTCPLoop(LPVOID lpParameter)
         logger.error("Error listening on socket");
 
         networkThread = nullptr;
-        SetEvent(g_StopEvent);
         return -1;
 	}
 
@@ -81,7 +78,6 @@ DWORD netTCPLoop(LPVOID lpParameter)
             logger.error(std::string("Error accepting client connection: ") + std::to_string(WSAGetLastError()));
 
             networkThread = nullptr;
-            SetEvent(g_StopEvent);
             return -1;
 		}
 

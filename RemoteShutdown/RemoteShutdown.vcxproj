@@ -172,16 +172,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ChallengeResponse.cc" />
-    <ClCompile Include="Sha256.cc" />
-    <ClCompile Include="Network.cc" />
-    <ClCompile Include="ProtectedStorage.cc" />
-    <ClCompile Include="RegHelper.cc" />
-    <ClCompile Include="RemoteShutdown.cc" />
-    <ClCompile Include="ServiceHelper.cc" />
-    <ClCompile Include="Logger.cc" />
+    <ClCompile Include="Base64.cpp" />
+    <ClCompile Include="ChallengeResponse.cpp" />
+    <ClCompile Include="Request.cpp" />
+    <ClCompile Include="Sha256.cpp" />
+    <ClCompile Include="Network.cpp" />
+    <ClCompile Include="ProtectedStorage.cpp" />
+    <ClCompile Include="RegHelper.cpp" />
+    <ClCompile Include="RemoteShutdown.cpp" />
+    <ClCompile Include="ServiceHelper.cpp" />
+    <ClCompile Include="Logger.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Base64.h" />
     <ClInclude Include="ChallengeResponse.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="GlobalConst.h" />
@@ -189,6 +192,7 @@
     <ClInclude Include="ProtectedStorage.h" />
     <ClInclude Include="RegHelper.h" />
     <ClInclude Include="RemoteShutdown.h" />
+    <ClInclude Include="Request.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="ServiceHelper.h" />
     <ClInclude Include="Sha256.h" />
