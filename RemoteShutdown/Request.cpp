@@ -1,145 +1,195 @@
 #include "Request.h"
 
+#include "GlobalConst.h"
+#include "ProtectedStorage.h"
+#include "ChallengeResponse.h"
+#include "Logger.h"
 
-#include <string>
-#include <vector>
+// Use windows function available from XP and forward
+#define _WIN32_WINNT NTDDI_WINXP
+#include <windows.h>
+#include <wtsapi32.h>
 
-// Prototype
-// std::basic_string<TCHAR> base64Encode(std::vector<BYTE> inputBuffer);
-// This line goes in header file
+#include <ctime>
 
-/* Define these if they aren't already in your environment
- * #define TEXT(x) Lx    //Unicode
- * #define TCHAR wchar_t //Unicode
- * #define TCHAR char    //Not unicode
- * #define TEXT(x) x     //Not unicode
- * #define DWORD long
- * #define BYTE unsigned char
- * They are defined by default in Windows.h
- */
+extern Logger logger;
 
- //Lookup table for encoding
- //If you want to use an alternate alphabet, change the characters here
-const static TCHAR encodeLookup[] = TEXT("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
-const static TCHAR padCharacter = TEXT('=');
-std::basic_string<TCHAR> base64Encode(std::vector<BYTE> inputBuffer)
-{
-    std::basic_string<TCHAR> encodedString;
-    encodedString.reserve(((inputBuffer.size() / 3) + (inputBuffer.size() % 3 > 0)) * 4);
-    DWORD temp;
-    std::vector<BYTE>::iterator cursor = inputBuffer.begin();
-    for (size_t idx = 0; idx < inputBuffer.size() / 3; idx++)
-    {
-        temp = (*cursor++) << 16; //Convert to big endian
-        temp += (*cursor++) << 8;
-        temp += (*cursor++);
-        encodedString.append(1, encodeLookup[(temp & 0x00FC0000) >> 18]);
-        encodedString.append(1, encodeLookup[(temp & 0x0003F000) >> 12]);
-        encodedString.append(1, encodeLookup[(temp & 0x00000FC0) >> 6]);
-        encodedString.append(1, encodeLookup[(temp & 0x0000003F)]);
-    }
-    switch (inputBuffer.size() % 3)
-    {
-    case 1:
-        temp = (*cursor++) << 16; //Convert to big endian
-        encodedString.append(1, encodeLookup[(temp & 0x00FC0000) >> 18]);
-        encodedString.append(1, encodeLookup[(temp & 0x0003F000) >> 12]);
-        encodedString.append(2, padCharacter);
-        break;
-    case 2:
-        temp = (*cursor++) << 16; //Convert to big endian
-        temp += (*cursor++) << 8;
-        encodedString.append(1, encodeLookup[(temp & 0x00FC0000) >> 18]);
-        encodedString.append(1, encodeLookup[(temp & 0x0003F000) >> 12]);
-        encodedString.append(1, encodeLookup[(temp & 0x00000FC0) >> 6]);
-        encodedString.append(1, padCharacter);
-        break;
-    }
-    return encodedString;
-}
-
-#include <string>
-#include <vector>
-
-// Prototype
-// std::vector<BYTE> base64Decode(const std::basic_string<TCHAR>& input);
-// This line goes in header file
-
-/* Define these if they aren't already in your environment
- * #define TEXT(x) Lx    //Unicode
- * #define TCHAR wchar_t //Unicode
- * #define TCHAR char    //Not unicode
- * #define TEXT(x) x     //Not unicode
- * #define DWORD long
- * #define BYTE unsigned char
- * They are defined by default in Windows.h
- */
-
-const static TCHAR padCharacter = TEXT('=');
-std::vector<BYTE> base64Decode(const std::basic_string<TCHAR>& input)
-{
-    if (input.length() % 4) //Sanity check
-        throw std::runtime_error("Non-Valid base64!");
-    size_t padding = 0;
-    if (input.length())
-    {
-        if (input[input.length() - 1] == padCharacter)
-            padding++;
-        if (input[input.length() - 2] == padCharacter)
-            padding++;
-    }
-    //Setup a vector to hold the result
-    std::vector<BYTE> decodedBytes;
-    decodedBytes.reserve(((input.length() / 4) * 3) - padding);
-    DWORD temp = 0; //Holds decoded quanta
-    std::basic_string<TCHAR>::const_iterator cursor = input.begin();
-    while (cursor < input.end())
-    {
-        for (size_t quantumPosition = 0; quantumPosition < 4; quantumPosition++)
-        {
-            temp <<= 6;
-            if (*cursor >= 0x41 && *cursor <= 0x5A) // This area will need tweaking if
-                temp |= *cursor - 0x41;		              // you are using an alternate alphabet
-            else if (*cursor >= 0x61 && *cursor <= 0x7A)
-                temp |= *cursor - 0x47;
-            else if (*cursor >= 0x30 && *cursor <= 0x39)
-                temp |= *cursor + 0x04;
-            else if (*cursor == 0x2B)
-                temp |= 0x3E; //change to 0x2D for URL alphabet
-            else if (*cursor == 0x2F)
-                temp |= 0x3F; //change to 0x5F for URL alphabet
-            else if (*cursor == padCharacter) //pad
-            {
-                switch (input.end() - cursor)
-                {
-                case 1: //One pad character
-                    decodedBytes.push_back((temp >> 16) & 0x000000FF);
-                    decodedBytes.push_back((temp >> 8) & 0x000000FF);
-                    return decodedBytes;
-                case 2: //Two pad characters
-                    decodedBytes.push_back((temp >> 10) & 0x000000FF);
-                    return decodedBytes;
-                default:
-                    throw std::runtime_error("Invalid Padding in Base 64!");
-                }
-            }
-            else
-                throw std::runtime_error("Non-Valid Character in Base 64!");
-            cursor++;
-        }
-        decodedBytes.push_back((temp >> 16) & 0x000000FF);
-        decodedBytes.push_back((temp >> 8) & 0x000000FF);
-        decodedBytes.push_back((temp) & 0x000000FF);
-    }
-    return decodedBytes;
-}
-
+std::string lastChallange = "";
+time_t lastChallangeTime;
 
 Request::Request()
 {
 }
 
-
 Request::~Request()
 {
+}
+
+static bool starts_with(const std::string str, const std::string prefix)
+{
+    return ((prefix.size() <= str.size()) && std::equal(prefix.begin(), prefix.end(), str.begin()));
+}
+
+const std::string Request::HandleMessage(std::string const &message, in_addr ip)
+{
+    ProtectedStorage store(std::string(PROG_NAME));
+    auto secret = store.read("token");
+
+    if (message.empty())
+    {
+        return "";
+    }
+
+    logger.debug(std::string("MessageRechived: ") + message);
+
+
+    if (message == "ping")
+    {
+        return "pong";
+    }
+    else if (message == "request_challange")
+    {
+        lastChallange = CChallengeResponse::createChallange();
+
+        if (lastChallange.compare("") == 0)
+        {
+            logger.error("Error in cryptographic module");
+            return std::string("internal error");
+        }
+
+        lastChallangeTime = time(nullptr);
+        return lastChallange;
+    }
+    else if (starts_with(message, "shutdown.") || starts_with(message, "admin_shutdown"))
+    {
+        if (secret.empty())
+        {
+            logger.error("No valid secret found");
+
+            lastChallange.clear();
+            return std::string("no token configured in service");
+        }
+
+        auto is_admin_shutdown = starts_with(message, "admin_shutdown");
+        auto validResponse = !lastChallange.empty() && CChallengeResponse::verifyResponse(lastChallange, secret, message);
+
+        lastChallange.clear();
+        secret.erase();
+
+        if (validResponse)
+        {
+            if (difftime(time(nullptr), lastChallangeTime) <= RESPONSE_LIMIT)
+            {
+                logger.info("Valid shutdown command received");
+
+                if (isUserLoggedOn())
+                {
+                    logger.info("User logged in");
+
+                    if (!is_admin_shutdown)
+                    {
+                        return std::string("active user logged in");
+                    }
+                }
+
+                if (isRemoteUserLoggedIn())
+                {
+                    logger.info("Remote user logged in");
+
+                    if (!is_admin_shutdown)
+                    {
+                        return std::string("active user logged in");
+                    }
+                }
+
+                // Shutdown pc
+                Shutdown(30, true);
+                logger.info("Shutdown performed");
+                return "1";
+            }
+            else
+            {
+                return "challenge response to slow";
+            }
+        }
+        else
+        {
+            return "invalid command";
+        }
+    }
+
+    return "unknown command";
+}
+
+bool Request::isRemoteUserLoggedIn()
+{
+    PWTS_SESSION_INFO ppSessionInfo = nullptr;
+    DWORD pCount;
+
+    const auto result = WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &ppSessionInfo, &pCount);
+    if (!result)
+    {
+        return false;
+    }
+
+    for (DWORD idx = 0; idx < pCount; idx++)
+    {
+        if (ppSessionInfo[idx].State == WTSActive)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool Request::isUserLoggedOn()
+{
+    HANDLE token = nullptr;
+    HANDLE dupplicatedToken = nullptr;
+
+    // Get the user of the "active" session
+    const auto dwSessionId = WTSGetActiveConsoleSessionId();
+    if (dwSessionId == 0xFFFFFFFF)
+    {
+        // there is no active session
+        return false;
+    }
+
+    const auto ret = WTSQueryUserToken(dwSessionId, &token);
+    if (token == nullptr)
+    {
+        // function call failed
+        // TODO
+        return false;
+    }
+
+    DuplicateToken(token, SecurityImpersonation, &dupplicatedToken);
+    if (dupplicatedToken == nullptr)
+    {
+        CloseHandle(token);
+        return false;
+    }
+
+    const auto result = ImpersonateLoggedOnUser(dupplicatedToken);
+    if (result)
+    {
+        // Get the username bRes = GetUserNameA(szTempBuf, &dwBufSize);
+        // stop impersonating the user
+        RevertToSelf();
+        return true;
+    }
+
+    CloseHandle(dupplicatedToken);
+    CloseHandle(token);
+
+    return false;
+}
+
+/**
+ * Shutdown pc
+ */
+void Request::Shutdown(unsigned long timeout, bool forceAppsClosed) noexcept
+{
+    InitiateSystemShutdownEx(nullptr, "Remote system shutdown requested.", timeout, forceAppsClosed, false, SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER | SHTDN_REASON_FLAG_PLANNED);
 }

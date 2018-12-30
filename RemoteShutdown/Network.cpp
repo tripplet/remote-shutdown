@@ -1,6 +1,7 @@
 #include "Network.h"
 #include "GlobalConst.h"
 #include "RemoteShutdown.h"
+#include "Request.h"
 
 #include <winsock.h>
 #include <string>
@@ -109,13 +110,13 @@ DWORD netTCPLoop(LPVOID lpParameter)
 					auto tmp = message.substr(0, index);
 					message.clear();
 
-					auto response = MessageRecieved(tmp.c_str(), connected_client.sin_addr);
+					const auto response = Request::HandleMessage(tmp.c_str(), connected_client.sin_addr);
                     send(connectedSocket, (response + "\n").c_str(), static_cast<int>(response.length() + 1), 0U);
 				}
 			}
 		} while (data_len > 0);
 
-		MessageRecieved(message.c_str(), connected_client.sin_addr);
+        Request::HandleMessage(message.c_str(), connected_client.sin_addr);
 		closesocket(connectedSocket);
 	}
 

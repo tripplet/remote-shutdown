@@ -14,5 +14,3 @@
 #include "ProtectedStorage.h"
 #include "sha256.h"
 #include "Logger.h"
-
-const std::string MessageRecieved(std::string const &message, in_addr ip);
