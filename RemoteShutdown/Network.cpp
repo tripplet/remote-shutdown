@@ -4,6 +4,7 @@
 #include "Request.h"
 
 #include <winsock.h>
+
 #include <string>
 #include <exception>
 
@@ -87,17 +88,24 @@ DWORD netTCPLoop(LPVOID lpParameter)
 		do
 		{
             char buffer[4096];
-			data_len = recv(connectedSocket, buffer, 4096, 0);
+			data_len = recv(connectedSocket, buffer, 4095, 0);
 
 			if (data_len > 0)
 			{
+				bool invalid_data = false;
                 for (size_t i = 0; i < data_len - 1; i++)
                 {
-                    if (buffer[i] == '\0')
+					const char character = buffer[i];
+                    if ((character < ' ' || character > '~') && character != '\r' && character != '\n')
                     {
-                        continue;
+						invalid_data = true;
                     }
                 }
+
+				if (invalid_data)
+				{
+					break;
+				}
 
 				// terminate string
 				buffer[data_len] = '\0';
@@ -116,7 +124,6 @@ DWORD netTCPLoop(LPVOID lpParameter)
 			}
 		} while (data_len > 0);
 
-        Request::HandleMessage(message.c_str(), connected_client.sin_addr);
 		closesocket(connectedSocket);
 	}
 
