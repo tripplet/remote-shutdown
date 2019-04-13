@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 // Implementation from https://en.wikibooks.org/wiki/Algorithm_Implementation/Miscellaneous/Base64
 
