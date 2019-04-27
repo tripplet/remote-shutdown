@@ -1,0 +1,16 @@
+# services.yaml for remote_shutdown
+
+send:
+  description: Send remote shutdown command to PC.
+  fields:
+    host:
+      description: Hostname or ip of the PC
+      example: 192.168.0.2
+    port:
+      description: Port of the running service on the pc
+      example: 10102
+    token:
+      description: The shared secret
+    force:
+      description: Force shutdown even if user is logged in
+      example: true
