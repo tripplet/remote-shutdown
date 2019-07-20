@@ -31,6 +31,8 @@ void Logger::WriteToConsoleWhileDebugging(std::string const &message)
 
 void Logger::info(std::string const &message)
 {
+	std::lock_guard<std::mutex> lock(this->lock);
+
 	LPCSTR messageArray[] = { message.c_str() };
 	ReportEvent(this->eventSource, EVENTLOG_INFORMATION_TYPE, 0U, 0U, nullptr, 1, 0U, messageArray, nullptr);
 
@@ -39,6 +41,8 @@ void Logger::info(std::string const &message)
 
 void Logger::warn(std::string const &message)
 {
+	std::lock_guard<std::mutex> lock(this->lock);
+
 	LPCSTR messageArray[] = { message.c_str() };
 	ReportEvent(this->eventSource, EVENTLOG_WARNING_TYPE, 0U, 0U, nullptr, 1, 0U, messageArray, nullptr);
 
@@ -47,6 +51,8 @@ void Logger::warn(std::string const &message)
 
 void Logger::error(std::string const &message)
 {
+	std::lock_guard<std::mutex> lock(this->lock);
+
 	LPCSTR messageArray[] = { message.c_str() };
 	ReportEvent(this->eventSource, EVENTLOG_ERROR_TYPE, 0U, 0U, nullptr, 1, 0U, messageArray, nullptr);
 
@@ -55,6 +61,8 @@ void Logger::error(std::string const &message)
 
 void Logger::debug(std::string const &message)
 {
+	std::lock_guard<std::mutex> lock(this->lock);
+
     this->WriteToConsoleWhileDebugging(std::string("DEBUG: ") + message);
 }
 
