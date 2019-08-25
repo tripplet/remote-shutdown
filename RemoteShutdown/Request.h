@@ -11,8 +11,6 @@ class Request
 
 
 public:
-    Request();
-    ~Request();
 
     static const std::string HandleMessage(std::string const &message, in_addr ip);
 

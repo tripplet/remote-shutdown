@@ -2,16 +2,17 @@
 
 #include "sha256.h"
 
+#define RANDOM_LEN 4096
+
 const std::string CChallengeResponse::createChallange()
 {
-    std::unique_ptr<char> random(generateRandom(RANDOM_LEN));
-
-    if (!random.get())
+    auto random = generateRandom(RANDOM_LEN);
+    if (!random)
     {
         return "";
     }
 
-    return sha256::ToHex(*sha256::Hash(std::vector<byte>(random.get(), random.get() + RANDOM_LEN)));
+    return sha256::ToHex(*sha256::Hash(*random.get()));
 }
 
 bool CChallengeResponse::verifyResponse(std::string const &challenge, std::string const &secret, std::string const &response)
@@ -29,11 +30,10 @@ bool CChallengeResponse::verifyResponse(std::string const &challenge, std::strin
 }
 
 
-char *CChallengeResponse::generateRandom(unsigned int len)
+std::unique_ptr<std::vector<byte> const> CChallengeResponse::generateRandom(unsigned int len)
 {
-    HCRYPTPROV hCryptProv;
-    char *pRandom = new char[len];
-    char *pReturn;
+    HCRYPTPROV hCryptProv = 0;
+	auto random = std::make_unique<std::vector<byte>>(len);
 
     // Acquire a cryptographic provider context handle
     if (!CryptAcquireContext(&hCryptProv, nullptr, nullptr, PROV_RSA_FULL, 0))
@@ -53,16 +53,15 @@ char *CChallengeResponse::generateRandom(unsigned int len)
     }
 
     // Generate the random number
-    if (!CryptGenRandom(hCryptProv, len, (unsigned char*)pRandom))
+	const auto success = CryptGenRandom(hCryptProv, len, random.get()->data());
+	CryptReleaseContext(hCryptProv, 0);
+	
+	if (success)
     {
-        pReturn = nullptr;
+		return random;
     }
-    else
-    {
-        pReturn = pRandom;
-    }
-
-    CryptReleaseContext(hCryptProv, 0);
-
-    return pReturn;
+	else
+	{
+		return nullptr;
+	}
 }

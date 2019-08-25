@@ -1,18 +1,18 @@
 #pragma once
-#define RANDOM_LEN 256
+
+#include <windows.h>
 
 #include <string>
-#include <windows.h>
+#include <vector>
 #include <memory>
 
 class CChallengeResponse
 {
 private:
-    static char *generateRandom(unsigned int len);
+	static std::unique_ptr<std::vector<byte> const> generateRandom(unsigned int len);
 
 public:
     static const std::string createChallange();
     static bool verifyResponse(std::string const &challange, std::string const &secret, std::string const &response);
 
 };
-

@@ -84,7 +84,7 @@ DWORD netTCPLoop(LPVOID lpParameter)
 		}
 
 		// Recieve data
-        int data_len = 0;
+		size_t data_len = 0;
 		do
 		{
             char buffer[4096];
@@ -92,6 +92,7 @@ DWORD netTCPLoop(LPVOID lpParameter)
 
 			if (data_len > 0)
 			{
+				// Check for invalid characters
 				bool invalid_data = false;
                 for (size_t i = 0; i < data_len - 1; i++)
                 {

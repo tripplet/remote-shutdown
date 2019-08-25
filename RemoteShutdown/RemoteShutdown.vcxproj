@@ -172,7 +172,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Base64.cpp" />
     <ClCompile Include="ChallengeResponse.cpp" />
     <ClCompile Include="Request.cpp" />
     <ClCompile Include="Sha256.cpp" />
@@ -184,7 +183,6 @@
     <ClCompile Include="Logger.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Base64.h" />
     <ClInclude Include="ChallengeResponse.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="GlobalConst.h" />

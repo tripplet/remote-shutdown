@@ -29,9 +29,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Base64.cpp">
-      <Filter>src\Request</Filter>
-    </ClCompile>
     <ClCompile Include="Request.cpp">
       <Filter>src\Request</Filter>
     </ClCompile>
@@ -92,9 +89,6 @@
       <Filter>src\Logging</Filter>
     </ClInclude>
     <ClInclude Include="Request.h">
-      <Filter>src\Request</Filter>
-    </ClInclude>
-    <ClInclude Include="Base64.h">
       <Filter>src\Request</Filter>
     </ClInclude>
   </ItemGroup>
