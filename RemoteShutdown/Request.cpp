@@ -56,11 +56,11 @@ const std::string Request::HandleMessage(std::string const &message, in_addr ip)
             logger.error("No valid secret found");
 
             lastChallange.clear();
-            return std::string("no token configured in service");
+            return std::string("no secret configured in service");
         }
 
-        auto is_admin_shutdown = starts_with(message, "admin_shutdown");
-        auto validResponse = !lastChallange.empty() && CChallengeResponse::verifyResponse(lastChallange, secret, message);
+		const auto is_admin_shutdown = starts_with(message, "admin_shutdown");
+        const auto validResponse = !lastChallange.empty() && CChallengeResponse::verifyResponse(lastChallange, secret, message);
 
         lastChallange.clear();
         secret.erase();

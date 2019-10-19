@@ -2,6 +2,7 @@
 
 #include "Network.h"
 #include "ProtectedStorage.h"
+#include "ChallengeResponse.h"
 
 #include <iostream>
 #include <ctime>
@@ -144,18 +145,26 @@ DWORD RxPipe(LPVOID lpParameter)
             {
                 break;
             }
+			
+			std::string result;
+			if (std::string(pchRequest) == "generate_secret")
+			{				
+				auto newSecret = CChallengeResponse::createChallange();
 
-            ProtectedStorage store(std::string(PROG_NAME));
-            std::string result;
-
-            if (store.save(std::string("token"), std::string(pchRequest)))
-            {
-                result = std::string("Secret successfully saved");
-            }
-            else
-            {
-                result = std::string("Failed to save secret");
-            }
+				ProtectedStorage store(std::string(PROG_NAME));				
+				if (store.save(std::string("token"), newSecret))
+				{
+					result = "New secret is: " + newSecret;
+				}
+				else
+				{
+					result = std::string("Failed to save secret");
+				}
+			}
+			else
+			{
+				result = std::string("Unknown command");
+			}
 
             strcpy_s(pchReply, PIPE_BUFFER_SIZE, TEXT(result.c_str()));
             cbReplyBytes = (lstrlen(pchReply) + 1) * sizeof(TCHAR);
@@ -192,7 +201,7 @@ DWORD RxPipe(LPVOID lpParameter)
 }
 
 
-void setSecret(std::string const &secret)
+void SendMessageToService(std::string const &secret)
 {
     HANDLE hPipe;
     TCHAR  chBuf[PIPE_BUFFER_SIZE];
@@ -301,7 +310,7 @@ int main(int argc, char **argv)
         {
             if (InstallCorrespondingService())
             {
-                std::cout << "Service successfully installed" << std::endl << "Specify secret with \"" PROG_NAME " -s SECRET\"";
+                std::cout << "Service successfully installed" << std::endl << "Specify secret with \"" PROG_NAME " -s\"";
             }
             else
             {
@@ -326,18 +335,11 @@ int main(int argc, char **argv)
         }
         else if (parameter == "-s")
         {
-            if (argc == 3)
-            {
-                setSecret(std::string(argv[2]));
-            }
-            else
-            {
-                std::cout << "Specify secret with \"" PROG_NAME " -s SECRET\"";
-            }
-        }
+            SendMessageToService("generate_secret");
+		}
         else
         {
-            std::cout << "Unknown switch usage\n\nFor install use \"" PROG_NAME " -i\"\nFor removing use \"" PROG_NAME " -r\"\nSpecify secret with \"" PROG_NAME " -s SECRET\"";
+            std::cout << "Unknown switch usage\n\nFor install use \"" PROG_NAME " -i\"\nFor removing use \"" PROG_NAME " -r\"\nChange secret with \"" PROG_NAME " -s \"";
         }
     }
     else
