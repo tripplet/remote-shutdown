@@ -83,7 +83,7 @@ namespace sha256
             if (status != STATUS_SUCCESS) { throw 0; }
 
             hashBytes = std::make_shared<std::vector<byte>>(sizeHash);
-            std::unique_ptr<byte> hashObject(new byte[sizeHashObject]);
+            auto hashObject = std::make_unique<byte[]>(sizeHashObject);
 
             // Create the hash
             status = BCryptCreateHash(hAlgorithm, &hHash, hashObject.get(), sizeHashObject, nullptr, 0U, 0U);
@@ -158,7 +158,7 @@ namespace sha256
             if (status != STATUS_SUCCESS) { throw 0; }
 
             hashBytes = std::make_shared<std::vector<byte>>(sizeHash);
-            std::unique_ptr<byte> hashObject(new byte[sizeHashObject]);
+            auto hashObject = std::make_unique<byte[]>(sizeHashObject);
 
             // Create the hash
             status = BCryptCreateHash(hAlgorithm, &hHash, hashObject.get(), sizeHashObject, const_cast<PUCHAR>(key.data()), static_cast<ULONG>(key.size()), 0U);

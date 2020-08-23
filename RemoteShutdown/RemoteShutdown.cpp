@@ -145,13 +145,13 @@ DWORD RxPipe(LPVOID lpParameter)
             {
                 break;
             }
-			
+
 			std::string result;
 			if (std::string(pchRequest) == "generate_token")
 			{				
 				auto newSecret = CChallengeResponse::createChallange();
 
-				ProtectedStorage store(std::string(PROG_NAME));				
+				ProtectedStorage store(std::string(PROG_NAME));
 				if (store.save(std::string("token"), newSecret))
 				{
 					result = "New token is: " + newSecret;
@@ -202,10 +202,10 @@ DWORD RxPipe(LPVOID lpParameter)
 
 void SendMessageToService(std::string const &secret)
 {
-    HANDLE hPipe;
-    TCHAR  chBuf[PIPE_BUFFER_SIZE];
-    BOOL   fSuccess = FALSE;
-    DWORD  cbRead, cbToWrite, cbWritten, dwMode;
+    HANDLE hPipe = nullptr;
+    TCHAR chBuf[PIPE_BUFFER_SIZE];
+    BOOL fSuccess = false;
+    DWORD cbRead, cbToWrite, cbWritten, dwMode;
     LPTSTR lpszPipename = TEXT("\\\\.\\pipe\\" PROG_NAME "Pipe");
 
     // Try to open a named pipe; wait for it, if necessary
