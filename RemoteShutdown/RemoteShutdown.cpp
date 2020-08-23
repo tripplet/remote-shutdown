@@ -30,7 +30,7 @@ void ServiceLoop(bool debugging)
 
     if (err != 0)
     {
-        logger.error(std::string("Initiaizing winsock failed with errorcode: ") + std::to_string(err) + ", exiting");
+        logger.error(std::string("Initializing winsock failed with error code: ") + std::to_string(err) + ", exiting");
         return;
     }
     else
@@ -40,19 +40,18 @@ void ServiceLoop(bool debugging)
 
     if (!debugging && !AquirePrivileges())
     {
-        logger.error("Unable to aquire neccessary privileges, exiting");
+        logger.error("Unable to acquire necessary privileges, exiting");
         return;
     }
     else
     {
-        logger.debug("Shutdown privilege aquired");
+        logger.debug("Shutdown privilege acquired");
     }
-
 
     logger.debug("Starting pipe thread...");
     rxPipeThread = CreateThread(nullptr, 0U, (LPTHREAD_START_ROUTINE)RxPipe, nullptr, 0U, nullptr);
 
-    logger.debug("Starting tcp thread...");
+    logger.debug("Starting TCP thread...");
     tcpThread = StartNetTCPLoopThread(DEFAULT_PORT);
 
     // Wait for stop event
@@ -371,6 +370,7 @@ bool AquirePrivileges()
     // Retrieve a handle of the access token
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
     {
+        CloseHandle(token);
         return false;
     }
 
@@ -378,6 +378,7 @@ bool AquirePrivileges()
     LUID luid_shutdown;
     if (!LookupPrivilegeValue(nullptr, SE_SHUTDOWN_NAME, &luid_shutdown))
     {
+        CloseHandle(token);
         return false;
     }
 
@@ -385,10 +386,11 @@ bool AquirePrivileges()
     LUID luid_tcb;
     if (!LookupPrivilegeValue(nullptr, SE_TCB_NAME, &luid_tcb))
     {
+        CloseHandle(token);
         return false;
     }
 
-    auto sizeof_tkp = FIELD_OFFSET(TOKEN_PRIVILEGES, Privileges[2]);
+    auto const sizeof_tkp = FIELD_OFFSET(TOKEN_PRIVILEGES, Privileges[2]);
     auto tkp = reinterpret_cast<TOKEN_PRIVILEGES*>(new byte[sizeof_tkp]);
 
     tkp->PrivilegeCount = 2;
@@ -398,9 +400,17 @@ bool AquirePrivileges()
     tkp->Privileges[1].Attributes = SE_PRIVILEGE_ENABLED;
 
     AdjustTokenPrivileges(token, false, tkp, sizeof_tkp, PTOKEN_PRIVILEGES{ nullptr }, PDWORD{ nullptr });
-
     delete tkp;
 
     // The return value of AdjustTokenPrivileges can't be tested
-    return GetLastError() == ERROR_SUCCESS;
+    if (GetLastError() != ERROR_SUCCESS)
+    {
+        CloseHandle(token);
+        return false;
+    }
+    else
+    {
+        CloseHandle(token);
+        return true;
+    }
 }
