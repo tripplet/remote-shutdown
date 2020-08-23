@@ -5,6 +5,9 @@ x64/*
 win32/*
 .vs/*
 
+SetupProject/bin
+SetupProject/obj
+
 clients/go/*.exe
 clients/go/debug
 

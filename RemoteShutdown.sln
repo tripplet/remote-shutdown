@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.168
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30225.117
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RemoteShutdown", "RemoteShutdown\RemoteShutdown.vcxproj", "{EF9DEF4A-D2BF-4518-B0D9-3F38C1EB6BB5}"
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "SetupProject", "SetupProject\SetupProject.wixproj", "{C6E1080D-77C5-4B3A-BC01-95858848D398}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,8 +23,17 @@ Global
 		{EF9DEF4A-D2BF-4518-B0D9-3F38C1EB6BB5}.Release|Win32.Build.0 = Release|x64
 		{EF9DEF4A-D2BF-4518-B0D9-3F38C1EB6BB5}.Release|x64.ActiveCfg = Release|x64
 		{EF9DEF4A-D2BF-4518-B0D9-3F38C1EB6BB5}.Release|x64.Build.0 = Release|x64
+		{C6E1080D-77C5-4B3A-BC01-95858848D398}.Debug|Win32.ActiveCfg = Debug|x86
+		{C6E1080D-77C5-4B3A-BC01-95858848D398}.Debug|Win32.Build.0 = Debug|x86
+		{C6E1080D-77C5-4B3A-BC01-95858848D398}.Debug|x64.ActiveCfg = Debug|x64
+		{C6E1080D-77C5-4B3A-BC01-95858848D398}.Release|Win32.ActiveCfg = Release|x86
+		{C6E1080D-77C5-4B3A-BC01-95858848D398}.Release|Win32.Build.0 = Release|x86
+		{C6E1080D-77C5-4B3A-BC01-95858848D398}.Release|x64.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9C588465-9DB9-42F5-A943-9985252D340A}
 	EndGlobalSection
 EndGlobal

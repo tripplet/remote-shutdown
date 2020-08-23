@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?define ProductName = "RemoteShutdown" ?>
+<?define CompleteProductName = "Remote Shutdown Service" ?>
+<?define MainFile=$(var.RemoteShutdown.TargetFileName)?>
+<?define UpgradeCode = "03635ea9-b1d8-41d4-86b7-3cef4da62956" ?>
+
+<?define ProductVersion = !(bind.fileVersion.$(var.MainFile)) ?>
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Name="$(var.CompleteProductName)"
+           Manufacturer="Tobias Tangemann"
+           UpgradeCode="$(var.UpgradeCode)"
+           Language="1033"
+           Version="$(var.ProductVersion)"
+           Id="*">
+
+    <Package InstallerVersion="405" Compressed="yes" InstallScope="perMachine" Platform="x64" />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <MajorUpgrade AllowDowngrades="no"  DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+
+    <Upgrade Id="$(var.UpgradeCode)">
+      <UpgradeVersion OnlyDetect="yes" Property="SAMEVERSIONINSTALLED"
+          Minimum="$(var.ProductVersion)" IncludeMinimum="yes"
+          Maximum="$(var.ProductVersion)" IncludeMaximum="yes" />
+    </Upgrade>
+
+    <CustomAction Id="PreventInstallationOfSameVersion" Error="[ProductName] [ProductVersion] is already installed." />
+
+    <InstallExecuteSequence>
+      <Custom Action="PreventInstallationOfSameVersion" After="FindRelatedProducts">SAMEVERSIONINSTALLED AND NOT Installed</Custom>
+    </InstallExecuteSequence>
+
+    <Feature Id="ProductFeature" Title="SetupProject" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+    </Feature>
+  </Product>
+
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="$(var.ProductName)" />
+      </Directory>
+    </Directory>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <Component Id="MainProduct" Guid="f53ee433-ba40-4913-872b-e2cc37fe039b">
+        <File Id="$(var.MainFile)" KeyPath="yes" Source="$(var.RemoteShutdown.TargetPath)"/>
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

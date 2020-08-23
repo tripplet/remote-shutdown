@@ -148,7 +148,7 @@ DWORD RxPipe(LPVOID lpParameter)
 
 			std::string result;
 			if (std::string(pchRequest) == "generate_token")
-			{				
+			{
 				auto newSecret = CChallengeResponse::createChallange();
 
 				ProtectedStorage store(std::string(PROG_NAME));
@@ -309,7 +309,16 @@ int main(int argc, char **argv)
         {
             if (InstallCorrespondingService())
             {
-                std::cout << "Service successfully installed." << std::endl << "Generate token with \"" PROG_NAME " -t\"";
+                std::cout << "Service successfully installed";
+
+                if (StartCorrespondingService())
+                {
+                    std::cout << " and started." << std::endl << "Generate token with \"" PROG_NAME " -t\"";
+                }
+                else
+                {
+                    std::cout << " but service could not be started!" << std::endl;
+                }
             }
             else
             {
@@ -329,7 +338,7 @@ int main(int argc, char **argv)
         }
         else if (parameter == "--debug")
         {
-            std::cout << "Debug running" << std::endl;
+            std::cout << "Debug service running in foreground..." << std::endl;
             ServiceLoop(true);
         }
         else if (parameter == "-t")
@@ -338,7 +347,7 @@ int main(int argc, char **argv)
 		}
         else
         {
-            std::cout << "Unknown switch usage\n\nFor install use \"" PROG_NAME " -i\"\nFor removing use \"" PROG_NAME " -r\"\nGenerate token with \"" PROG_NAME " -g\"";
+            std::cout << "Unknown switch usage\n\nFor install use \"" PROG_NAME " -i\"\nFor removing use \"" PROG_NAME " -r\"\nGenerate token with \"" PROG_NAME " -t\"";
         }
     }
     else
