@@ -50,6 +50,11 @@
     <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
       <Component Id="MainProduct" Guid="f53ee433-ba40-4913-872b-e2cc37fe039b">
         <File Id="$(var.MainFile)" KeyPath="yes" Source="$(var.RemoteShutdown.TargetPath)"/>
+        <ServiceInstall Id="ServiceInstaller" Type="ownProcess" Vital="yes"
+            Name="RemoteShutdown" DisplayName="Remote Shutdown"
+            Description="Remote Shutdown of Windows PC" Start="auto"
+            Account="LocalSystem" ErrorControl="normal" />
+        <ServiceControl Id="StartService" Stop="both" Start="install" Remove="both" Name="RemoteShutdown" Wait="yes" />
       </Component>
     </ComponentGroup>
   </Fragment>
