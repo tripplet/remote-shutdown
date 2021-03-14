@@ -29,7 +29,6 @@ bool CChallengeResponse::verifyResponse(std::string const &challenge, std::strin
     return (sha256::constant_time_compare(command + "." + valid_response, response));
 }
 
-
 std::unique_ptr<std::vector<byte> const> CChallengeResponse::generateRandom(unsigned int len)
 {
     HCRYPTPROV hCryptProv = 0;
@@ -55,7 +54,7 @@ std::unique_ptr<std::vector<byte> const> CChallengeResponse::generateRandom(unsi
     // Generate the random number
 	const auto success = CryptGenRandom(hCryptProv, len, random.get()->data());
 	CryptReleaseContext(hCryptProv, 0);
-	
+
 	if (success)
     {
 		return random;
