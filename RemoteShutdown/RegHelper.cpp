@@ -2,24 +2,7 @@
 
 namespace registry
 {
-    bool SetKeyValue(HKEY mainKey, std::string const &subKey, std::string const &keyName, DWORD dwType, const byte *value, unsigned long size)
-    {
-        HKEY hKey;
-        if (RegCreateKeyEx(mainKey, subKey.c_str(), 0U, nullptr, 0U, KEY_WRITE, nullptr, &hKey, nullptr) != ERROR_SUCCESS)
-        {
-            return false;
-        }
-
-        if (RegSetValueEx(hKey, keyName.c_str(), 0U, dwType, value, size) != ERROR_SUCCESS)
-        {
-            return false;
-        }
-
-        RegCloseKey(hKey);
-        return true;
-    }
-
-    DWORD GetKeySize(HKEY mainKey, std::string const &subKey, std::string const &keyName)
+    DWORD GetKeySize(HKEY mainKey, std::string const& subKey, std::string const& keyName) noexcept
     {
         HKEY hKey;
         DWORD dDataSize;
@@ -38,7 +21,7 @@ namespace registry
         return dDataSize;
     }
 
-    bool GetKeyValue(HKEY mainKey, std::string const &subKey, std::string const &keyName, DWORD dDataLen, BYTE *data)
+    bool GetKeyValue(HKEY mainKey, std::string const &subKey, std::string const &keyName, DWORD dDataLen, BYTE *data) noexcept
     {
         HKEY hKey;
 
@@ -83,7 +66,7 @@ namespace registry
     const std::string GetKeyString(HKEY mainKey, std::string const &subKey, std::string const &keyName, bool &success)
     {
         char *sValue;
-        DWORD dDataLen = GetKeySize(mainKey, subKey, keyName);
+        const DWORD dDataLen = GetKeySize(mainKey, subKey, keyName);
 
         if (dDataLen == 0)
         {
@@ -109,7 +92,7 @@ namespace registry
     byte *GetKeyData(HKEY mainKey, std::string const &subKey, std::string const &keyName, bool &success, unsigned long &size)
     {
         BYTE *bValue;
-        DWORD dDataLen = GetKeySize(mainKey, subKey, keyName);
+        const DWORD dDataLen = GetKeySize(mainKey, subKey, keyName);
 
         if (dDataLen == 0)
         {
@@ -132,12 +115,12 @@ namespace registry
         }
     }
 
-    bool DeleteKey(HKEY mainKey, std::string const &subKey)
+    bool DeleteKey(HKEY mainKey, std::string const &subKey) noexcept
     {
         return (ERROR_SUCCESS == RegDeleteKey(mainKey, subKey.c_str()));
     }
 
-    bool DeleteKeyValue(HKEY mainKey, std::string const &subKey, std::string const &keyName)
+    bool DeleteKeyValue(HKEY mainKey, std::string const &subKey, std::string const &keyName) noexcept
     {
         HKEY hKey;
 
