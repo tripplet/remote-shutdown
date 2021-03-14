@@ -205,3 +205,103 @@ bool StartCorrespondingService()
 
 	return result;
 }
+
+void SendMessageToService(std::string const& command)
+{
+	HANDLE hPipe = nullptr;
+	TCHAR chBuf[PIPE_BUFFER_SIZE];
+	BOOL fSuccess = false;
+	DWORD cbRead, cbToWrite, cbWritten, dwMode;
+	const LPTSTR lpszPipename = PIPE_NAME;
+
+	// Try to open a named pipe; wait for it, if necessary
+	while (true)
+	{
+		hPipe = CreateFile(
+			lpszPipename, // pipe name
+			GENERIC_READ | GENERIC_WRITE, // read and write access
+			0,              // no sharing
+			nullptr,        // default security attributes
+			OPEN_EXISTING,  // opens existing pipe
+			0,              // default attributes
+			nullptr);       // no template file
+
+		// Break if the pipe handle is valid.
+		if (hPipe != INVALID_HANDLE_VALUE)
+		{
+			break;
+		}
+
+		// Exit if an error other than ERROR_PIPE_BUSY occurs.
+
+		if (GetLastError() != ERROR_PIPE_BUSY)
+		{
+			printf("Error: Could not open pipe. GLE=%d\n", GetLastError());
+			return;
+		}
+
+		// All pipe instances are busy, so wait for 2 seconds
+		if (!WaitNamedPipe(lpszPipename, 2000))
+		{
+			printf("Could not open pipe: 2 second wait timed out.");
+			return;
+		}
+	}
+
+	// The pipe connected; change to message-read mode
+	dwMode = PIPE_READMODE_MESSAGE;
+
+	fSuccess = SetNamedPipeHandleState(
+		hPipe,    // pipe handle
+		&dwMode,  // new pipe mode
+		nullptr,  // don't set maximum bytes
+		nullptr); // don't set maximum time
+
+	if (!fSuccess)
+	{
+		printf(TEXT("SetNamedPipeHandleState failed. GLE=%d\n"), GetLastError());
+		return;
+	}
+
+	// Send a message to the pipe server
+	cbToWrite = static_cast<DWORD>((command.length() + 1) * sizeof(TCHAR));
+
+	fSuccess = WriteFile(
+		hPipe,           // pipe handle
+		command.c_str(), // message
+		cbToWrite,       // message length
+		&cbWritten,      // bytes written
+		nullptr);        // not overlapped
+
+	if (!fSuccess)
+	{
+		printf(TEXT("WriteFile to pipe failed. GLE=%d\n"), GetLastError());
+		return;
+	}
+
+	do
+	{
+		// Read from the pipe
+		fSuccess = ReadFile(
+			hPipe,    // pipe handle
+			chBuf,    // buffer to receive reply
+			PIPE_BUFFER_SIZE * sizeof(TCHAR),  // size of buffer
+			&cbRead,  // number of bytes read
+			NULL);    // not overlapped
+
+		if (!fSuccess && GetLastError() != ERROR_MORE_DATA)
+		{
+			break;
+		}
+
+		printf(TEXT("\"%s\"\n"), chBuf);
+	} while (!fSuccess);  // repeat loop if ERROR_MORE_DATA
+
+	if (!fSuccess)
+	{
+		printf(TEXT("ReadFile from pipe failed. GLE=%d\n"), GetLastError());
+		return;
+	}
+
+	CloseHandle(hPipe);
+}
