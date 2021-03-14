@@ -12,6 +12,7 @@
 HANDLE g_StopEvent;
 Logger logger(PROG_NAME);
 
+
 HANDLE tcpThread;
 HANDLE rxPipeThread;
 
@@ -38,7 +39,7 @@ void ServiceLoop(bool debugging)
         logger.debug("Winsock initialized");
     }
 
-    if (!debugging && !AquirePrivileges())
+    if (!AquirePrivileges())
     {
         logger.error("Unable to acquire necessary privileges, exiting");
         return;
@@ -77,11 +78,12 @@ DWORD RxPipe(LPVOID lpParameter)
     HANDLE hHeap = GetProcessHeap();
     TCHAR* pchRequest = (TCHAR*)HeapAlloc(hHeap, 0, PIPE_BUFFER_SIZE * sizeof(TCHAR));
     TCHAR* pchReply = (TCHAR*)HeapAlloc(hHeap, 0, PIPE_BUFFER_SIZE * sizeof(TCHAR));
+    ZeroMemory(pchRequest, PIPE_BUFFER_SIZE * sizeof(TCHAR));
 
     DWORD cbBytesRead = 0, cbReplyBytes = 0, cbWritten = 0;
     BOOL fSuccess = FALSE;
     HANDLE hPipe = NULL;
-    LPTSTR lpszPipename = TEXT("\\\\.\\pipe\\" PROG_NAME "Pipe");
+    const LPTSTR lpszPipename = PIPE_NAME;
 
     if (pchRequest == NULL)
     {
@@ -118,27 +120,33 @@ DWORD RxPipe(LPVOID lpParameter)
 
     if (hPipe == INVALID_HANDLE_VALUE)
     {
+        logger.error("Unable to create pipe");
         return -1;
     }
 
-    // Wait for the client to connect; if it succeeds,
-    // the function returns a nonzero value. If the function
-    // returns zero, GetLastError returns ERROR_PIPE_CONNECTED.
-    bool fConnected = ConnectNamedPipe(hPipe, nullptr) ? true : (GetLastError() == ERROR_PIPE_CONNECTED);
-
-    if (fConnected)
+    while (true)
     {
+        // Wait for the client to connect; if it succeeds,
+        // the function returns a nonzero value. If the function
+        // returns zero, GetLastError returns ERROR_PIPE_CONNECTED.
+        bool fConnected = ConnectNamedPipe(hPipe, nullptr) ? true : (GetLastError() == ERROR_PIPE_CONNECTED);
+
+        if (!fConnected)
+        {
+            break;
+        }
+
         // Loop until done reading
         while (true)
         {
             // Read client requests from the pipe. This simplistic code only allows messages
             // up to BUFSIZE characters in length.
             fSuccess = ReadFile(
-                hPipe,                          // handle to pipe
-                pchRequest,                     // buffer to receive data
-                PIPE_BUFFER_SIZE * sizeof(TCHAR), // size of buffer
-                &cbBytesRead,                   // number of bytes read
-                nullptr);                       // not overlapped I/O
+                hPipe,                                // handle to pipe
+                pchRequest,                           // buffer to receive data
+                PIPE_BUFFER_SIZE * sizeof(TCHAR) - 1, // size of buffer
+                &cbBytesRead,                         // number of bytes read
+                nullptr);                             // not overlapped I/O
 
             if (!fSuccess || cbBytesRead == 0)
             {
@@ -188,116 +196,15 @@ DWORD RxPipe(LPVOID lpParameter)
         // handle to this pipe instance.
         FlushFileBuffers(hPipe);
         DisconnectNamedPipe(hPipe);
-        CloseHandle(hPipe);
-
-        HeapFree(hHeap, 0, pchRequest);
-        HeapFree(hHeap, 0, pchReply);
-
-        return 1;
     }
+
+    HeapFree(hHeap, 0, pchRequest);
+    HeapFree(hHeap, 0, pchReply);
 
     return -1;
 }
 
-void SendMessageToService(std::string const &secret)
-{
-    HANDLE hPipe = nullptr;
-    TCHAR chBuf[PIPE_BUFFER_SIZE];
-    BOOL fSuccess = false;
-    DWORD cbRead, cbToWrite, cbWritten, dwMode;
-    LPTSTR lpszPipename = TEXT("\\\\.\\pipe\\" PROG_NAME "Pipe");
 
-    // Try to open a named pipe; wait for it, if necessary
-    while (true)
-    {
-        hPipe = CreateFile(
-            lpszPipename, // pipe name
-            GENERIC_READ | GENERIC_WRITE, // read and write access
-            0,              // no sharing
-            nullptr,        // default security attributes
-            OPEN_EXISTING,  // opens existing pipe
-            0,              // default attributes
-            nullptr);       // no template file
-
-        // Break if the pipe handle is valid.
-        if (hPipe != INVALID_HANDLE_VALUE)
-        {
-            break;
-        }
-
-        // Exit if an error other than ERROR_PIPE_BUSY occurs.
-
-        if (GetLastError() != ERROR_PIPE_BUSY)
-        {
-            printf("Error: Could not open pipe. GLE=%d\n", GetLastError());
-            return;
-        }
-
-        // All pipe instances are busy, so wait for 2 seconds
-        if (!WaitNamedPipe(lpszPipename, 2000))
-        {
-            printf("Could not open pipe: 2 second wait timed out.");
-            return;
-        }
-    }
-
-    // The pipe connected; change to message-read mode
-    dwMode = PIPE_READMODE_MESSAGE;
-
-    fSuccess = SetNamedPipeHandleState(
-        hPipe,    // pipe handle
-        &dwMode,  // new pipe mode
-        nullptr,  // don't set maximum bytes
-        nullptr); // don't set maximum time
-
-    if (!fSuccess)
-    {
-        printf(TEXT("SetNamedPipeHandleState failed. GLE=%d\n"), GetLastError());
-        return;
-    }
-
-    // Send a message to the pipe server
-    cbToWrite = static_cast<DWORD>((secret.length() + 1) * sizeof(TCHAR));
-
-    fSuccess = WriteFile(
-        hPipe,          // pipe handle
-        secret.c_str(), // message
-        cbToWrite,      // message length
-        &cbWritten,     // bytes written
-        nullptr);       // not overlapped
-
-    if (!fSuccess)
-    {
-        printf(TEXT("WriteFile to pipe failed. GLE=%d\n"), GetLastError());
-        return;
-    }
-
-    do
-    {
-        // Read from the pipe
-        fSuccess = ReadFile(
-            hPipe,    // pipe handle
-            chBuf,    // buffer to receive reply
-            PIPE_BUFFER_SIZE * sizeof(TCHAR),  // size of buffer
-            &cbRead,  // number of bytes read
-            NULL);    // not overlapped
-
-        if (!fSuccess && GetLastError() != ERROR_MORE_DATA)
-        {
-            break;
-        }
-
-        printf(TEXT("\"%s\"\n"), chBuf);
-    } while (!fSuccess);  // repeat loop if ERROR_MORE_DATA
-
-    if (!fSuccess)
-    {
-        printf(TEXT("ReadFile from pipe failed. GLE=%d\n"), GetLastError());
-        return;
-    }
-
-    CloseHandle(hPipe);
-}
 
 int main(int argc, char **argv)
 {
@@ -359,48 +266,79 @@ int main(int argc, char **argv)
 }
 
 
+
+bool AreLUIDsEqual(LUID luid1, LUID luid2) noexcept
+{
+    return luid1.LowPart == luid2.LowPart && luid1.HighPart == luid2.HighPart;
+}
+
+std::string GetLastErrorAsString()
+{
+    const DWORD errorMessageID = GetLastError();
+    if (errorMessageID == 0)
+    {
+        return std::string();
+    }
+    else
+    {
+        return std::system_category().message(errorMessageID);
+    }
+}
+
 /**
- * Acquire the privileges
+ * Acquire the shutdown privilege and drop all other privileges.
  * @return True if the privileges could be acquired, false otherwise
  */
 bool AquirePrivileges()
 {
-    HANDLE token = nullptr;
-
-    // Retrieve a handle of the access token
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
-    {
-        CloseHandle(token);
-        return false;
-    }
-
     // Lookup the SE_SHUTDOWN_NAME privilege
     LUID luid_shutdown;
     if (!LookupPrivilegeValue(nullptr, SE_SHUTDOWN_NAME, &luid_shutdown))
     {
-        CloseHandle(token);
         return false;
     }
 
-    // Lookup the SE_TCB_NAME privilege
-    LUID luid_tcb;
-    if (!LookupPrivilegeValue(nullptr, SE_TCB_NAME, &luid_tcb))
+    HANDLE token = nullptr;
+
+    // Retrieve a handle of the access token
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_READ | TOKEN_WRITE, &token))
     {
         CloseHandle(token);
         return false;
     }
 
-    auto const sizeof_tkp = FIELD_OFFSET(TOKEN_PRIVILEGES, Privileges[2]);
-    auto tkp = reinterpret_cast<TOKEN_PRIVILEGES*>(new byte[sizeof_tkp]);
+    // Get the required buffer size for the TokenPrivileges
+    DWORD sizeof_privileges = 0;
+    GetTokenInformation(token, TokenPrivileges, nullptr, 0, &sizeof_privileges);
+    if (sizeof_privileges == 0)
+    {
+        CloseHandle(token);
+        return false;
+    }
 
-    tkp->PrivilegeCount = 2;
-    tkp->Privileges[0].Luid = luid_shutdown;
-    tkp->Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-    tkp->Privileges[1].Luid = luid_tcb;
-    tkp->Privileges[1].Attributes = SE_PRIVILEGE_ENABLED;
+    // Allocate TokenPrivileges struct and get them
+    auto privilegeBuffer = std::make_unique<byte[]>(sizeof_privileges);
+    auto privileges = reinterpret_cast<PTOKEN_PRIVILEGES>(privilegeBuffer.get());
 
-    AdjustTokenPrivileges(token, false, tkp, sizeof_tkp, PTOKEN_PRIVILEGES{ nullptr }, PDWORD{ nullptr });
-    delete tkp;
+    if (!GetTokenInformation(token, TokenPrivileges, privileges, sizeof_privileges, &sizeof_privileges))
+    {
+        CloseHandle(token);
+        return false;
+    }
+
+    for (size_t i = 0; i < privileges->PrivilegeCount; i++)
+    {
+        if (AreLUIDsEqual(luid_shutdown, privileges->Privileges[i].Luid))
+        {
+            privileges->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED;
+        }
+        else
+        {
+            privileges->Privileges[i].Attributes = SE_PRIVILEGE_REMOVED;
+        }
+    }
+
+    AdjustTokenPrivileges(token, false, privileges, 0, nullptr, nullptr);
 
     // The return value of AdjustTokenPrivileges can't be tested
     if (GetLastError() != ERROR_SUCCESS)
