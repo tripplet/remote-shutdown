@@ -3,6 +3,7 @@
   "name": "Remote Windows Shutdown",
   "version": "1.0",
   "documentation": "https://github.com/tripplet/remote-shutdown",
+  "issue_tracker": "https://github.com/tripplet/remote-shutdown/issues",
   "dependencies": [],
   "codeowners": ["@tripplet"],
   "requirements": []
