@@ -1,0 +1,6 @@
+{
+    "name": "Remote Shutdown",
+    "content_in_root": false,
+    "iot_class": "Local Push",
+    "render_readme": false
+}
