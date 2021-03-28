@@ -1,0 +1,8 @@
+{
+  "domain": "remote_windows_shutdown",
+  "name": "Remote Windows Shutdown",
+  "documentation": "https://github.com/tripplet/remote-shutdown",
+  "dependencies": [],
+  "codeowners": ["@tripplet"],
+  "requirements": []
+}
