@@ -1,6 +1,6 @@
 {
-  "domain": "remote_windows_shutdown",
-  "name": "Remote Windows Shutdown",
+  "domain": "remote_shutdown",
+  "name": "Remote Shutdown",
   "version": "1.0",
   "documentation": "https://github.com/tripplet/remote-shutdown",
   "issue_tracker": "https://github.com/tripplet/remote-shutdown/issues",
