@@ -11,8 +11,7 @@
 
 extern Logger logger;
 
-std::string lastChallange = "";
-time_t lastChallangeTime;
+time_t lastChallangeTime = 0;
 
 static bool starts_with(const std::string str, const std::string prefix)
 {
@@ -38,68 +37,63 @@ const std::string Request::HandleMessage(std::string const &message, in_addr ip)
     }
     else if (message == "request_challange")
     {
-        lastChallange = CChallengeResponse::createChallange();
-
-        if (lastChallange.compare("") == 0)
+        if (lastChallangeTime == 0 || difftime(time(nullptr), lastChallangeTime) >= REQUEST_LIMIT)
         {
-            logger.error("Error in cryptographic module");
-            return std::string("internal error");
-        }
+            auto challenge = CChallengeResponse::createChallange();
+            if (challenge.compare("") == 0)
+            {
+                logger.error("Error in cryptographic module");
+                return std::string("internal error");
+            }
 
-        lastChallangeTime = time(nullptr);
-        return lastChallange;
+            lastChallangeTime = std::time(nullptr);
+            return challenge;
+        }
+        else
+        {
+            return "invalid";
+        }
     }
     else if (starts_with(message, "shutdown.") || starts_with(message, "admin_shutdown"))
     {
         if (secret.empty())
         {
             logger.error("No valid secret found");
-
-            lastChallange.clear();
             return std::string("no secret configured in service");
         }
 
-		const auto is_admin_shutdown = starts_with(message, "admin_shutdown");
-        const auto validResponse = !lastChallange.empty() && CChallengeResponse::verifyResponse(lastChallange, secret, message);
+        const auto is_admin_shutdown = starts_with(message, "admin_shutdown");
+        const auto validResponse = CChallengeResponse::verifyResponse(secret, message);
 
-        lastChallange.clear();
         secret.erase();
 
         if (validResponse)
         {
-            if (difftime(time(nullptr), lastChallangeTime) <= RESPONSE_LIMIT)
+            logger.info("Valid shutdown command received");
+            if (isUserLoggedOn())
             {
-                logger.info("Valid shutdown command received");
+                logger.info("User logged in");
 
-                if (isUserLoggedOn())
+                if (!is_admin_shutdown)
                 {
-                    logger.info("User logged in");
-
-                    if (!is_admin_shutdown)
-                    {
-                        return std::string("active user logged in");
-                    }
+                    return std::string("active user logged in");
                 }
-
-                if (isRemoteUserLoggedIn())
-                {
-                    logger.info("Remote user logged in");
-
-                    if (!is_admin_shutdown)
-                    {
-                        return std::string("active user logged in");
-                    }
-                }
-
-                // Shutdown pc
-                Shutdown(30, true);
-                logger.info("Shutdown performed");
-                return "1";
             }
-            else
+
+            if (isRemoteUserLoggedIn())
             {
-                return "challenge response to slow";
+                logger.info("Remote user logged in");
+
+                if (!is_admin_shutdown)
+                {
+                    return std::string("active user logged in");
+                }
             }
+
+            // Shutdown pc
+            Shutdown(30, true);
+            logger.info("Shutdown performed");
+            return "1";
         }
         else
         {

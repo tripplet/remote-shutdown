@@ -9,10 +9,12 @@
 class CChallengeResponse
 {
 private:
-	static std::unique_ptr<std::vector<byte> const> generateRandom(unsigned int len);
+    static std::unique_ptr<std::vector<byte> const> generateRandom(unsigned int len);
+    static INT64 GetCurrentTimestamp();
 
 public:
+    static const std::string createSecret();
     static const std::string createChallange();
-    static bool verifyResponse(std::string const &challange, std::string const &secret, std::string const &response);
+    static bool verifyResponse(std::string const &secret, std::string const &response);
 
 };

@@ -153,25 +153,25 @@ DWORD RxPipe(LPVOID lpParameter)
                 break;
             }
 
-			std::string result;
-			if (std::string(pchRequest) == "generate_token")
-			{
-				auto newSecret = CChallengeResponse::createChallange();
+            std::string result;
+            if (std::string(pchRequest) == "generate_token")
+            {
+                auto newSecret = CChallengeResponse::createSecret();
 
-				ProtectedStorage store(std::string(PROG_NAME));
-				if (store.save(std::string("token"), newSecret))
-				{
-					result = "New token is: " + newSecret;
-				}
-				else
-				{
-					result = std::string("Failed to save token");
-				}
-			}
-			else
-			{
-				result = std::string("Unknown command");
-			}
+                ProtectedStorage store(std::string(PROG_NAME));
+                if (store.save(std::string("token"), newSecret))
+                {
+                    result = "New token is: " + newSecret;
+                }
+                else
+                {
+                    result = std::string("Failed to save token");
+                }
+            }
+            else
+            {
+                result = std::string("Unknown command");
+            }
 
             strcpy_s(pchReply, PIPE_BUFFER_SIZE, TEXT(result.c_str()));
             cbReplyBytes = (lstrlen(pchReply) + 1) * sizeof(TCHAR);
@@ -250,7 +250,7 @@ int main(int argc, char **argv)
         else if (parameter == "-t")
         {
             SendMessageToService("generate_token");
-		}
+        }
         else
         {
             std::cout << "Unknown switch usage\n\nFor install use \"" PROG_NAME " -i\"\nFor removing use \"" PROG_NAME " -r\"\nGenerate token with \"" PROG_NAME " -t\"";

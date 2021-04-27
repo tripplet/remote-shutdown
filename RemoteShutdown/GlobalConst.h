@@ -7,5 +7,6 @@
 
 #define PIPE_NAME        TEXT(R"(\\.\pipe\ProtectedPrefix\Administrators\)" PROG_NAME R"(\Pipe)");
 
+#define REQUEST_LIMIT    5 // seconds
 #define RESPONSE_LIMIT   5 // seconds
 #define PIPE_BUFFER_SIZE 512

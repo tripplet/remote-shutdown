@@ -42,7 +42,7 @@ def setup(hass, config):
             cmd = 'shutdown'
         message = f'{cmd}.{challenge}'.encode('ascii')
         mac = hmac.new(key.encode('ascii'), message, hashlib.sha256)
-        return f'{cmd}.{mac.hexdigest()}'
+        return f'{cmd}.{challenge}.{mac.hexdigest()}'
 
     def shutdown(host, port, secret, force, socket_timeout):
         """Send shutdown command to the specified host"""

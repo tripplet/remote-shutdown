@@ -54,7 +54,7 @@ func main() {
 	}
 
 	// Send the response
-	_, err = conn.Write([]byte(command + authenticatedResponse(command+challange, config.token) + "\n"))
+	_, err = conn.Write([]byte(command + challange + "." + authenticatedResponse(command+challange, config.token) + "\n"))
 	checkError(err)
 
 	// Get result of command
