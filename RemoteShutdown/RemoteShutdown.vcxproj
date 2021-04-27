@@ -114,7 +114,7 @@
     <ClInclude Include="Sha256.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="RemoteShutdown.rc" />
+    <ResourceCompile Include="Resources.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

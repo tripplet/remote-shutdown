@@ -7,7 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "WinResrc.h"
+#include "winres.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -25,18 +25,18 @@ LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE
+1 TEXTINCLUDE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE
+2 TEXTINCLUDE 
 BEGIN
-    "#include ""afxres.h""\r\n"
+    "#include ""winres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE
+3 TEXTINCLUDE 
 BEGIN
     "\r\n"
     "\0"
@@ -51,15 +51,15 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,1,0,0
- PRODUCTVERSION 2,1,0,0
- FILEFLAGSMASK 0x17L
+ FILEVERSION 2,3,0,0
+ PRODUCTVERSION 2,3,0,0
+ FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
 #else
  FILEFLAGS 0x0L
 #endif
- FILEOS 0x4L
+ FILEOS 0x40004L
  FILETYPE 0x1L
  FILESUBTYPE 0x0L
 BEGIN
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Tangemann"
             VALUE "FileDescription", "RemoteShutdown"
-            VALUE "FileVersion", "2.1.0.0"
+            VALUE "FileVersion", "2.2.0.0"
             VALUE "InternalName", "RemoteShutdown"
-            VALUE "LegalCopyright", "Copyright (C) 2019"
+            VALUE "LegalCopyright", "Copyright (C) 2021"
             VALUE "OriginalFilename", "RemoteShutdown.exe"
             VALUE "ProductName", "RemoteShutdown"
-            VALUE "ProductVersion", "2.1.0.0"
+            VALUE "ProductVersion", "2.2.0.0"
         END
     END
     BLOCK "VarFileInfo"
