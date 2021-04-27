@@ -82,18 +82,16 @@
     <ClInclude Include="GlobalConst.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>res</Filter>
-    </ClInclude>
     <ClInclude Include="Logger.h">
       <Filter>src\Logging</Filter>
     </ClInclude>
     <ClInclude Include="Request.h">
       <Filter>src\Request</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="RemoteShutdown.rc">
+    <ResourceCompile Include="Resources.rc">
       <Filter>res</Filter>
     </ResourceCompile>
   </ItemGroup>

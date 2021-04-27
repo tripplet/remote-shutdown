@@ -5,7 +5,7 @@
 
 namespace registry
 {
-    inline bool SetKeyValue(HKEY mainKey, std::string const& subKey, std::string const& keyName, DWORD dwType, const byte* value, unsigned long size)
+    inline bool SetKeyValue(HKEY mainKey, std::string const& subKey, std::string const& keyName, DWORD dwType, const byte* value, unsigned long size) noexcept
     {
         HKEY hKey;
         if (RegCreateKeyEx(mainKey, subKey.c_str(), 0U, nullptr, 0U, KEY_WRITE, nullptr, &hKey, nullptr) != ERROR_SUCCESS)
@@ -21,6 +21,7 @@ namespace registry
         RegCloseKey(hKey);
         return true;
     }
+
     bool SetKeyValue(HKEY mainKey, std::string const &subKey, std::string const &keyName, std::string const &value);
     bool SetKeyValue(HKEY mainKey, std::string const &subKey, std::string const &keyName, unsigned long value);
     bool SetKeyValue(HKEY mainKey, std::string const &subKey, std::string const &keyName, const byte *value, unsigned long size);

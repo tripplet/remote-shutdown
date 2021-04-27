@@ -56,77 +56,77 @@ DWORD netTCPLoop(LPVOID lpParameter)
         return -1;
     }
 
-	// Listen for clients to connect
-	rc = listen(acceptSocket, 10);
-	if (rc == SOCKET_ERROR)
-	{
+    // Listen for clients to connect
+    rc = listen(acceptSocket, 10);
+    if (rc == SOCKET_ERROR)
+    {
         logger.error("Error listening on socket");
 
         networkThread = nullptr;
         return -1;
-	}
+    }
 
-	// Endless loop
-	while (true)
-	{
+    // Endless loop
+    while (true)
+    {
         std::string message = "";
         struct sockaddr_in connected_client{};
         int client_len = sizeof(connected_client);
 
-		// Wait for client to connect
+        // Wait for client to connect
         const auto connectedSocket = accept(acceptSocket, reinterpret_cast<sockaddr*>(&connected_client), &client_len);
-		if (connectedSocket == INVALID_SOCKET)
-		{
+        if (connectedSocket == INVALID_SOCKET)
+        {
             logger.error(std::string("Error accepting client connection: ") + std::to_string(WSAGetLastError()));
 
             networkThread = nullptr;
             return -1;
-		}
+        }
 
-		// Recieve data
-		size_t data_len = 0;
-		do
-		{
+        // Recieve data
+        size_t data_len = 0;
+        do
+        {
             char buffer[4096];
-			data_len = recv(connectedSocket, buffer, 4095, 0);
+            data_len = recv(connectedSocket, buffer, 4095, 0);
 
-			if (data_len > 0)
-			{
-				// Check for invalid characters
-				bool invalid_data = false;
+            if (data_len > 0)
+            {
+                // Check for invalid characters
+                bool invalid_data = false;
                 for (size_t i = 0; i < data_len - 1; i++)
                 {
-					const char character = buffer[i];
+                    const char character = buffer[i];
                     if ((character < ' ' || character > '~') && character != '\r' && character != '\n')
                     {
-						invalid_data = true;
+                        invalid_data = true;
                     }
                 }
 
-				if (invalid_data)
-				{
-					break;
-				}
+                if (invalid_data)
+                {
+                    break;
+                }
 
-				// terminate string
-				buffer[data_len] = '\0';
-				message.append(buffer);
+                // terminate string
+                buffer[data_len] = '\0';
+                message.append(buffer);
 
-				auto index = message.find("\n");
+                auto index = message.find("\n");
 
-				if (index != std::string::npos)
-				{
-					auto tmp = message.substr(0, index);
-					message.clear();
+                if (index != std::string::npos)
+                {
+                    auto tmp = message.substr(0, index);
+                    message.clear();
 
-					const auto response = Request::HandleMessage(tmp, connected_client.sin_addr);
+                    const auto response = Request::HandleMessage(tmp, connected_client.sin_addr);
                     send(connectedSocket, (response + "\n").c_str(), static_cast<int>(response.length() + 1), 0U);
-				}
-			}
-		} while (data_len > 0);
+                }
+            }
+        } while (data_len > 0);
 
-		closesocket(connectedSocket);
-	}
+        closesocket(connectedSocket);
+    }
 
-	return 0;
+    return 0;
 }

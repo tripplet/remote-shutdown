@@ -15,7 +15,7 @@ class ProtectedStorage
 {
 private:
 	DATA_BLOB* encrypt(std::string const &data);
-	std::string decrypt(DATA_BLOB const &data);
+	std::string decrypt(DATA_BLOB &data);
 
 	std::string subkey;
 	DATA_BLOB *entropy;

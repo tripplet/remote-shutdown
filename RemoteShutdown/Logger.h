@@ -8,17 +8,17 @@
 class Logger
 {
 private:
-	HANDLE eventSource = nullptr;
+    HANDLE eventSource = nullptr;
     std::string name;
     bool debugging = false;
-	std::mutex lock;
+    std::mutex lock;
 
     void WriteToConsoleWhileDebugging(std::string const &message);
 
 public:
-	explicit Logger(std::string const &name);
-	~Logger();
-	
+    explicit Logger(std::string const &name);
+    ~Logger();
+
     void Init(bool debugging) noexcept;
 
     void debug(std::string const &message);

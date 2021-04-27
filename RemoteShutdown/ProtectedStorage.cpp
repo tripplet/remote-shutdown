@@ -3,98 +3,97 @@
 
 ProtectedStorage::ProtectedStorage(std::string const &storageName) : entropy(nullptr)
 {
-	this->subkey = DEFAULT_REG_PATH + storageName;
+    this->subkey = DEFAULT_REG_PATH + storageName;
 }
 
 ProtectedStorage::ProtectedStorage(std::string const &storageName, std::string const &entropy)
 {
-	this->subkey = DEFAULT_REG_PATH + storageName;
+    this->subkey = DEFAULT_REG_PATH + storageName;
 
-	this->entropy = new DATA_BLOB;
-	BYTE* data = new BYTE[this->entropy->cbData];
+    this->entropy = new DATA_BLOB;
 
-	this->entropy->pbData = new BYTE[this->entropy->cbData];
-	this->entropy->cbData = (DWORD)entropy.length();
+    this->entropy->cbData = (DWORD)entropy.length();
+    this->entropy->pbData = new BYTE[this->entropy->cbData];
 
-	memcpy_s(this->entropy->pbData, sizeof(BYTE), entropy.data(), this->entropy->cbData);
+    memcpy_s(this->entropy->pbData, sizeof(BYTE), entropy.data(), this->entropy->cbData);
 }
 
 
 ProtectedStorage::~ProtectedStorage()
 {
-	if (this->entropy != nullptr)
-	{
-		delete[] this->entropy->pbData;
-	}
+    if (this->entropy != nullptr)
+    {
+        delete[] this->entropy->pbData;
+    }
 
-	delete this->entropy;
-	this->entropy = nullptr;
+    delete this->entropy;
+    this->entropy = nullptr;
 }
 
 
 bool ProtectedStorage::save(std::string const &key, std::string const &data)
 {
-	DATA_BLOB* encryptedData = encrypt(data);
-	bool ret = registry::SetKeyValue(DEFAULT_REG_ROOT, subkey.c_str(), key.c_str(), encryptedData->pbData, static_cast<int>(encryptedData->cbData));
+    auto encryptedData = encrypt(data);
+    bool ret = registry::SetKeyValue(DEFAULT_REG_ROOT, subkey.c_str(), key.c_str(), encryptedData->pbData, static_cast<int>(encryptedData->cbData));
 
-	LocalFree(encryptedData->pbData);
-	delete encryptedData;
+    LocalFree(encryptedData->pbData);
+    delete encryptedData;
 
-	return ret;
+    return ret;
 }
 
 std::string ProtectedStorage::read(std::string const &key)
 {
-	bool success = false;
-	unsigned long size = 0;
-	DATA_BLOB input;
+    bool success = false;
+    unsigned long size = 0;
+    DATA_BLOB input;
 
-	input.pbData = registry::GetKeyData(DEFAULT_REG_ROOT, subkey.c_str(), key.c_str(), success, size);
+    input.pbData = registry::GetKeyData(DEFAULT_REG_ROOT, subkey.c_str(), key.c_str(), success, size);
 
-	if (success)
+    if (success)
     {
-		input.cbData = static_cast<int>(size);
-		std::string returnValue = decrypt(input);
+        input.cbData = static_cast<int>(size);
+        auto returnValue = decrypt(input);
 
-		delete[] input.pbData;
+        delete[] input.pbData;
 
-		return returnValue;
-	}
-	else
-	{
-		return "";
-	}
+        return returnValue;
+    }
+    else
+    {
+        return "";
+    }
 }
 
 
 DATA_BLOB* ProtectedStorage::encrypt(std::string const &data)
 {
-	DATA_BLOB* output = new DATA_BLOB;
-	DATA_BLOB input;
+    auto output = new DATA_BLOB;
+    DATA_BLOB input;
 
-	output->cbData = 0;
-	input.pbData = (BYTE*)data.data();
-	input.cbData = (DWORD)data.length() + 1;
+    output->cbData = 0;
+    input.pbData = (BYTE*)data.data();
+    input.cbData = (DWORD)data.length() + 1;
 
-	CryptProtectData(&input, nullptr, (DATA_BLOB*) this->entropy, nullptr, nullptr, 0, output);
+    CryptProtectData(&input, nullptr, this->entropy, nullptr, nullptr, 0, output);
 
-	return output;
+    return output;
 }
 
-std::string ProtectedStorage::decrypt(DATA_BLOB const &data)
+std::string ProtectedStorage::decrypt(DATA_BLOB &data)
 {
-	DATA_BLOB output;
-	std::string str_output;
+    DATA_BLOB output;
+    std::string str_output;
 
-	if (CryptUnprotectData((DATA_BLOB*) &data, nullptr, (DATA_BLOB*) this->entropy, nullptr, nullptr, 0, &output))
-	{
-		str_output = (char*)output.pbData;
-		LocalFree(output.pbData);
+    if (CryptUnprotectData(&data, nullptr, this->entropy, nullptr, nullptr, 0, &output))
+    {
+        str_output = (char*)output.pbData;
+        LocalFree(output.pbData);
 
-		return str_output;
-	}
-	else
-	{
-		return std::string("");
-	}
+        return str_output;
+    }
+    else
+    {
+        return std::string("");
+    }
 }
