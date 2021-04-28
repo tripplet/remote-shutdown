@@ -17,6 +17,15 @@ The programs runs as a windows service and opens the TCP port 10102.
   Access to the protected storage would only possible for Administrator users.
 
 
+## Existing clients
+
+- [Python](clients/python)
+- [Go](clients/go)
+- [Home Assistant](custom_components/remote_shutdown)
+  Easy usage via [HACS](https://hacs.xyz/) by adding
+
+  `https://github.com/tripplet/remote-shutdown` to the a user defined repositories.
+
 ## Limitations / TODOs
 
 - Only one active TCP connection can be handled.
