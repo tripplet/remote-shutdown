@@ -4,6 +4,7 @@ Allows easy shutdown of a windows pc via network.
 
 The programs runs as a windows service and opens the TCP port 10102.
 
+**[Download](https://github.com/tripplet/remote-shutdown/releases)**
 
 ## Features
 
