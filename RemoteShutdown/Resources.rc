@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Tangemann"
             VALUE "FileDescription", "RemoteShutdown"
-            VALUE "FileVersion", "2.2.0.0"
+            VALUE "FileVersion", "2.3.0.0"
             VALUE "InternalName", "RemoteShutdown"
             VALUE "LegalCopyright", "Copyright (C) 2021"
             VALUE "OriginalFilename", "RemoteShutdown.exe"
             VALUE "ProductName", "RemoteShutdown"
-            VALUE "ProductVersion", "2.2.0.0"
+            VALUE "ProductVersion", "2.3.0.0"
         END
     END
     BLOCK "VarFileInfo"
