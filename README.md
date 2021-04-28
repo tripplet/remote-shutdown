@@ -2,7 +2,7 @@
 
 Allows easy shutdown of a windows pc via network.
 
-The programs runs as a windows service and opens the TCP port 10102.
+The program runs as a windows service and opens the TCP port 10102.
 
 **[Download](https://github.com/tripplet/remote-shutdown/releases)**
 
@@ -73,7 +73,7 @@ The client has a window of 5 seconds to send a valid response.
     ```
 
 3. The windows pc response with a UTC timestamp and a challenge.
-   The timestamp encodes the expiration of the challenge is is set to 5 seconds.
+   The timestamp encodes the expiration of the challenge (now() + 5 seconds).
    Example: `12345678.RANDOM_LONG_HEX_STRING`
 
 4. The client receives the challenge and calculates the response with the shared secret.
