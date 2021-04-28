@@ -20,9 +20,6 @@ static bool starts_with(const std::string str, const std::string prefix)
 
 const std::string Request::HandleMessage(std::string const &message, in_addr ip)
 {
-    ProtectedStorage store(std::string(PROG_NAME));
-    auto secret = store.read("token");
-
     if (message.empty())
     {
         return "";
@@ -56,6 +53,9 @@ const std::string Request::HandleMessage(std::string const &message, in_addr ip)
     }
     else if (starts_with(message, "shutdown.") || starts_with(message, "admin_shutdown"))
     {
+        ProtectedStorage store(std::string(PROG_NAME));
+        auto secret = store.read("token");
+
         if (secret.empty())
         {
             logger.error("No valid secret found");
