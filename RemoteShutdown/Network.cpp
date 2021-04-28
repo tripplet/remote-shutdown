@@ -83,7 +83,7 @@ DWORD netTCPLoop(LPVOID lpParameter)
             return -1;
         }
 
-        // Recieve data
+        // Receive data
         size_t data_len = 0;
         do
         {
