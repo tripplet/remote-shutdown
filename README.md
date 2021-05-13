@@ -14,7 +14,7 @@ The program runs as a windows service and opens the TCP port 10102.
 - Command exchange can easily be implemented in almost any programming language (even on and ESP8266)
 - The generated key is stored securely using [Protected Storage](https://docs.microsoft.com/en-us/windows/win32/devnotes/pstore).
 - The generated key cannot be retrieved again, only reset.
-  Access to the protected storage would only possible for Administrator users.
+  Access to the protected storage would only be possible for Administrator users.
 
 
 ## Existing clients
@@ -24,7 +24,7 @@ The program runs as a windows service and opens the TCP port 10102.
 - [Home Assistant](custom_components/remote_shutdown)
   Easy usage via [HACS](https://hacs.xyz/) by adding
 
-  `https://github.com/tripplet/remote-shutdown` to the a user defined repositories.
+  `https://github.com/tripplet/remote-shutdown` to the user defined repositories.
 
 ## Limitations / TODOs
 
@@ -33,7 +33,7 @@ The program runs as a windows service and opens the TCP port 10102.
 ## Generating/Retrieving the secret
 
 The following command will generate a new secret and print it once.
-If the command is executed a second time a new secret will be set.
+If the command is executed a second time a new secret will be generated overwriting the old one.
 
     "C:\Program Files\RemoteShutdown\RemoteShutdown.exe" -t
 
@@ -47,16 +47,19 @@ There are currently two commands:
 - shutdown: This will only shutdown the PC if there is no active UI session.
   A locked screen also counts as an active session.
   Only if no user is logged on this command will shutdown the PC.
+  This can be useful if the pc was started using wake on lan to retrieve files via smb.
+  In this case the shutdown command can savely be used as the pc will only shutdown if no 
+  user logged in.
 - admin_shutdown: This will always shutdown the pc regardless of any active UI session.
 
-The use is given a message from windows that the shutdown will be performed in 1 minute.
+The user is given a message from windows that the shutdown will be performed in 1 minute.
 This allows the user to cancel the shutdown with the normal windows command: `shutdown /a`.
 
 
 ### Detailed protocol example (python)
 
-The complete code can be found [here](clients/python).
-All commands must be terminated with the line break \n.
+The complete python code can be found [here](clients/python).
+All packet must be terminated with the line break \n and all text is ASCII encoded.
 The client has a window of 5 seconds to send a valid response.
 
 1. The client opens a TCP connection to the windows PC on port 10102.
@@ -72,9 +75,9 @@ The client has a window of 5 seconds to send a valid response.
     conn.send(b'request_challange\n')
     ```
 
-3. The windows pc response with a UTC timestamp and a challenge.
+3. The windows pc response with an UTC timestamp and a challenge.
    The timestamp encodes the expiration of the challenge (now() + 5 seconds).
-   Example: `12345678.RANDOM_LONG_HEX_STRING`
+   Example: `12345678.RANDOM_LONG_HEX_CHALLENGE_STRING`
 
 4. The client receives the challenge and calculates the response with the shared secret.
 
@@ -92,7 +95,7 @@ The client has a window of 5 seconds to send a valid response.
     conn.send((f'{cmd}.{challenge}.{mac.hexdigest()}\n').encode('ascii'))
     ```
 
-6. The windows pc response with the ascii number "1" if the shutdown will be performed.
+6. The windows pc response with the ascii number "1" (0x31) if the shutdown will be performed.
    Any other response indicates an error.
    Be aware that the shutdown can still be canceled by the user.
 
