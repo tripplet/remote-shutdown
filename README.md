@@ -97,6 +97,9 @@ The client has a window of 5 seconds to send a valid response.
 
 6. The windows pc response with the ascii number "1" (0x31) if the shutdown will be performed.
    Any other response indicates an error.
+   As with all commands the final response is terminated with \n.
+   The server will not activly close the TCP session, this is the responsibility of the client.
+   
    Be aware that the shutdown can still be canceled by the user.
 
 
