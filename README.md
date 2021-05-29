@@ -11,6 +11,7 @@ The program runs as a windows service and opens the TCP port 10102.
 - Less then 1MB memory usage
 - No need to store windows credentials on external systems
 - Secure and simple challenge response protocol
+- Easy installation with ready to use msi setup
 - Command exchange can easily be implemented in almost any programming language (even on and ESP8266)
 - The generated key is stored securely using [Protected Storage](https://docs.microsoft.com/en-us/windows/win32/devnotes/pstore).
 - The generated key cannot be retrieved again, only reset.
