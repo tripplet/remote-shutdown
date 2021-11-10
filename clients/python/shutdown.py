@@ -34,7 +34,7 @@ def shutdown(host, port, secret, force, socket_timeout):
             challenge = conn.recv(2048).decode('ascii').strip()
             response = authenticated_response(challenge, secret, force)
             conn.send((response + '\n').encode('ascii'))
-            result = conn.recv(2048).decode('ascii')
+            result = conn.recv(2048).decode('ascii').strip()
             if result == '1':
                 return True, None
             return False, result

@@ -1,7 +1,7 @@
 {
   "domain": "remote_shutdown",
   "name": "Remote Shutdown",
-  "version": "2.3",
+  "version": "2.4",
   "documentation": "https://github.com/tripplet/remote-shutdown",
   "issue_tracker": "https://github.com/tripplet/remote-shutdown/issues",
   "dependencies": [],
