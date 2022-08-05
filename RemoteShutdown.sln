@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30225.117
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32210.238
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RemoteShutdown", "RemoteShutdown\RemoteShutdown.vcxproj", "{EF9DEF4A-D2BF-4518-B0D9-3F38C1EB6BB5}"
 EndProject
@@ -16,8 +16,8 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{EF9DEF4A-D2BF-4518-B0D9-3F38C1EB6BB5}.Debug|x64.ActiveCfg = Debug|x64
 		{EF9DEF4A-D2BF-4518-B0D9-3F38C1EB6BB5}.Debug|x64.Build.0 = Debug|x64
-		{EF9DEF4A-D2BF-4518-B0D9-3F38C1EB6BB5}.Release|x64.ActiveCfg = Debug|x64
-		{EF9DEF4A-D2BF-4518-B0D9-3F38C1EB6BB5}.Release|x64.Build.0 = Debug|x64
+		{EF9DEF4A-D2BF-4518-B0D9-3F38C1EB6BB5}.Release|x64.ActiveCfg = Release|x64
+		{EF9DEF4A-D2BF-4518-B0D9-3F38C1EB6BB5}.Release|x64.Build.0 = Release|x64
 		{EF9DEF4A-D2BF-4518-B0D9-3F38C1EB6BB5}.Setup|x64.ActiveCfg = Release|x64
 		{EF9DEF4A-D2BF-4518-B0D9-3F38C1EB6BB5}.Setup|x64.Build.0 = Release|x64
 		{C6E1080D-77C5-4B3A-BC01-95858848D398}.Debug|x64.ActiveCfg = Debug|x64
