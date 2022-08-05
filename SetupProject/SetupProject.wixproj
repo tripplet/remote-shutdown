@@ -6,7 +6,7 @@
     <ProductVersion>3.10</ProductVersion>
     <ProjectGuid>c6e1080d-77c5-4b3a-bc01-95858848d398</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>RemoteShutown</OutputName>
+    <OutputName>RemoteShutdown</OutputName>
     <OutputType>Package</OutputType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
