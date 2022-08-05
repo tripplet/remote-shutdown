@@ -1,58 +1,45 @@
 #include "ProtectedStorage.h"
 
-
-ProtectedStorage::ProtectedStorage(std::string const &storageName) : entropy(nullptr)
+ProtectedStorage::ProtectedStorage(std::string const& storageName)
 {
-    this->subkey = DEFAULT_REG_PATH + storageName;
+    ProtectedStorage(storageName, std::string());
 }
 
 ProtectedStorage::ProtectedStorage(std::string const &storageName, std::string const &entropy)
 {
     this->subkey = DEFAULT_REG_PATH + storageName;
 
-    this->entropy = new DATA_BLOB;
-
-    this->entropy->cbData = (DWORD)entropy.length();
-    this->entropy->pbData = new BYTE[this->entropy->cbData];
-
-    memcpy_s(this->entropy->pbData, sizeof(BYTE), entropy.data(), this->entropy->cbData);
-}
-
-
-ProtectedStorage::~ProtectedStorage()
-{
-    if (this->entropy != nullptr)
+    if (entropy.size() > 0) 
     {
-        delete[] this->entropy->pbData;
+        this->entropy.assign(entropy.begin(), entropy.end());
+        this->entropyObject.cbData = static_cast<DWORD>(this->entropy.size());
+        this->entropyObject.pbData = this->entropy.data();
     }
-
-    delete this->entropy;
-    this->entropy = nullptr;
+    else
+    {
+        this->entropy = {};
+        this->entropyObject.cbData = 0;
+        this->entropyObject.pbData = nullptr;
+    }
 }
 
-
-bool ProtectedStorage::save(std::string const &key, std::string const &data)
+bool ProtectedStorage::save(std::string const &key, std::string const &data) const
 {
-    auto encryptedData = encrypt(data);
-    bool ret = registry::SetKeyValue(DEFAULT_REG_ROOT, subkey.c_str(), key.c_str(), encryptedData->pbData, static_cast<int>(encryptedData->cbData));
-
-    LocalFree(encryptedData->pbData);
-    delete encryptedData;
-
-    return ret;
+    auto encryptedData = this->encrypt(data);
+    return registry::SetKeyValue(DEFAULT_REG_ROOT, subkey.c_str(), key.c_str(), encryptedData->pbData, static_cast<int>(encryptedData->cbData));
 }
 
-std::string ProtectedStorage::read(std::string const &key)
+std::string ProtectedStorage::read(std::string const& key) const
 {
     bool success = false;
     unsigned long size = 0;
-    DATA_BLOB input;
+    DATA_BLOB input = {};
 
     input.pbData = registry::GetKeyData(DEFAULT_REG_ROOT, subkey.c_str(), key.c_str(), success, size);
 
     if (success)
     {
-        input.cbData = static_cast<int>(size);
+        input.cbData = static_cast<DWORD>(size);
         auto returnValue = decrypt(input);
 
         delete[] input.pbData;
@@ -66,34 +53,45 @@ std::string ProtectedStorage::read(std::string const &key)
 }
 
 
-DATA_BLOB* ProtectedStorage::encrypt(std::string const &data)
+std::unique_ptr<DATA_BLOB> ProtectedStorage::encrypt(std::string const& data) const
 {
-    auto output = new DATA_BLOB;
-    DATA_BLOB input;
+    auto output = std::make_unique<DATA_BLOB>();
+    DATA_BLOB input = {};
 
     output->cbData = 0;
-    input.pbData = (BYTE*)data.data();
+    input.pbData = (BYTE*)data.c_str();
     input.cbData = (DWORD)data.length() + 1;
 
-    CryptProtectData(&input, nullptr, this->entropy, nullptr, nullptr, 0, output);
+    DATA_BLOB* entropy = nullptr;
+    if (this->entropyObject.cbData > 0)
+    {
+        entropy = const_cast<DATA_BLOB*>(&this->entropyObject);
+    }
+
+    CryptProtectData(&input, nullptr, entropy, nullptr, nullptr, 0, output.get());
 
     return output;
 }
 
-std::string ProtectedStorage::decrypt(DATA_BLOB &data)
+std::string ProtectedStorage::decrypt(DATA_BLOB &data) const
 {
-    DATA_BLOB output;
-    std::string str_output;
-
-    if (CryptUnprotectData(&data, nullptr, this->entropy, nullptr, nullptr, 0, &output))
+    DATA_BLOB* entropy = nullptr;
+    if (this->entropyObject.cbData > 0) 
     {
-        str_output = (char*)output.pbData;
+        entropy = const_cast<DATA_BLOB*>(&this->entropyObject);
+    }
+
+    std::string str_output;
+    DATA_BLOB output;
+    if (CryptUnprotectData(&data, nullptr, entropy, nullptr, nullptr, 0, &output))
+    {
+        str_output.assign((char*)output.pbData);
         LocalFree(output.pbData);
 
         return str_output;
     }
     else
     {
-        return std::string("");
+        return std::string();
     }
 }

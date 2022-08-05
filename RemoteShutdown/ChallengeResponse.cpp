@@ -1,4 +1,5 @@
 #include <ctime>
+#include <stdexcept>
 
 #include "GlobalConst.h"
 #include "ChallengeResponse.h"
@@ -79,10 +80,10 @@ bool CChallengeResponse::verifyResponse(std::string const &secret, std::string c
     return (sha256::constant_time_compare(valid_hmac, hmac));
 }
 
-std::unique_ptr<std::vector<byte> const> CChallengeResponse::generateRandom(unsigned int len)
+std::vector<byte> CChallengeResponse::generateRandom(unsigned int len)
 {
     HCRYPTPROV hCryptProv = 0;
-    auto random = std::make_unique<std::vector<byte>>(len);
+    auto random = std::vector<byte>(len);
 
     // Acquire a cryptographic provider context handle
     if (!CryptAcquireContext(&hCryptProv, nullptr, nullptr, PROV_RSA_FULL, 0))
@@ -92,17 +93,17 @@ std::unique_ptr<std::vector<byte> const> CChallengeResponse::generateRandom(unsi
         {
             if (!CryptAcquireContext(&hCryptProv, nullptr, nullptr, PROV_RSA_FULL, CRYPT_NEWKEYSET))
             {
-                return nullptr;
+                throw std::logic_error("Unable to acquire crypt context for generating random data");
             }
         }
         else
         {
-            return nullptr;
+            throw std::logic_error("Unable to acquire crypt context for generating random data second time");
         }
     }
 
     // Generate the random number
-    const auto success = CryptGenRandom(hCryptProv, len, random.get()->data());
+    const auto success = CryptGenRandom(hCryptProv, len, random.data());
     CryptReleaseContext(hCryptProv, 0);
 
     if (success)
@@ -111,7 +112,7 @@ std::unique_ptr<std::vector<byte> const> CChallengeResponse::generateRandom(unsi
     }
     else
     {
-        return nullptr;
+        throw std::logic_error("Unable to generate random data");
     }
 }
 

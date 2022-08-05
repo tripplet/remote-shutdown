@@ -83,10 +83,10 @@ namespace sha256
             if (status != STATUS_SUCCESS) { throw 0; }
 
             hashBytes = std::make_shared<std::vector<byte>>(sizeHash);
-            auto hashObject = std::make_unique<byte[]>(sizeHashObject);
+            auto hashObject = std::vector<byte>(sizeHashObject);
 
             // Create the hash
-            status = BCryptCreateHash(hAlgorithm, &hHash, hashObject.get(), sizeHashObject, nullptr, 0U, 0U);
+            status = BCryptCreateHash(hAlgorithm, &hHash, hashObject.data(), sizeHashObject, nullptr, 0U, 0U);
             if (status != STATUS_SUCCESS) { throw 0; }
 
             // Hash the data
@@ -111,7 +111,7 @@ namespace sha256
         }
         else
         {
-            throw errorMessage;
+            throw std::logic_error(errorMessage);
         }
     }
 
@@ -158,10 +158,10 @@ namespace sha256
             if (status != STATUS_SUCCESS) { throw 0; }
 
             hashBytes = std::make_shared<std::vector<byte>>(sizeHash);
-            auto hashObject = std::make_unique<byte[]>(sizeHashObject);
+            auto hashObject = std::vector<byte>(sizeHashObject);
 
             // Create the hash
-            status = BCryptCreateHash(hAlgorithm, &hHash, hashObject.get(), sizeHashObject, const_cast<PUCHAR>(key.data()), static_cast<ULONG>(key.size()), 0U);
+            status = BCryptCreateHash(hAlgorithm, &hHash, hashObject.data(), sizeHashObject, const_cast<PUCHAR>(key.data()), static_cast<ULONG>(key.size()), 0U);
             if (status != STATUS_SUCCESS) { throw 0; }
 
             // Hash the data
@@ -187,7 +187,7 @@ namespace sha256
         }
         else
         {
-            throw errorMessage;
+            throw std::logic_error(errorMessage);
         }
     }
 

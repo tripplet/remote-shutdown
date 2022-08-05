@@ -3,6 +3,8 @@
 #pragma comment(lib, "crypt32.lib")
 
 #include <string>
+#include <memory>
+#include <vector>
 #include <windows.h>
 #include <wincrypt.h>
 
@@ -14,18 +16,18 @@
 class ProtectedStorage
 {
 private:
-	DATA_BLOB* encrypt(std::string const &data);
-	std::string decrypt(DATA_BLOB &data);
+	std::unique_ptr<DATA_BLOB> encrypt(std::string const &data) const;
+	std::string decrypt(DATA_BLOB &data) const;
 
 	std::string subkey;
-	DATA_BLOB *entropy;
+	std::vector<byte> entropy;
+	DATA_BLOB entropyObject;
 
 public:
-	explicit ProtectedStorage(std::string const &storageName);
+	ProtectedStorage(std::string const& storageName);
 	ProtectedStorage(std::string const &storageName, std::string const &entropy);
-	~ProtectedStorage();
 
-	bool save(std::string const &key, std::string const &data);
-	std::string read(std::string const &key);
+	bool save(std::string const &key, std::string const &data) const;
+	std::string read(std::string const &key) const;
 };
 

@@ -36,7 +36,7 @@ const std::string Request::HandleMessage(std::string const &message, in_addr ip)
     {
         if (lastChallangeTime == 0 || difftime(time(nullptr), lastChallangeTime) >= REQUEST_LIMIT)
         {
-            auto challenge = CChallengeResponse::createChallange();
+            auto challenge = CChallengeResponse::createChallenge();
             if (challenge.compare("") == 0)
             {
                 logger.error("Error in cryptographic module");
@@ -104,13 +104,13 @@ const std::string Request::HandleMessage(std::string const &message, in_addr ip)
     return "unknown command";
 }
 
-bool Request::isRemoteUserLoggedIn()
+bool Request::isRemoteUserLoggedIn() noexcept
 {
     PWTS_SESSION_INFO ppSessionInfo = nullptr;
     DWORD pCount;
 
     const auto result = WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &ppSessionInfo, &pCount);
-    if (!result)
+    if (!result || ppSessionInfo == nullptr)
     {
         return false;
     }
@@ -126,7 +126,7 @@ bool Request::isRemoteUserLoggedIn()
     return false;
 }
 
-bool Request::isUserLoggedOn()
+bool Request::isUserLoggedOn() noexcept
 {
     HANDLE token = nullptr;
     HANDLE dupplicatedToken = nullptr;

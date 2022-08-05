@@ -8,14 +8,12 @@
 
 class Request
 {
-
-
 public:
 
     static const std::string HandleMessage(std::string const &message, in_addr ip);
 
-    static bool Request::isRemoteUserLoggedIn();
-    static bool Request::isUserLoggedOn();
+    static bool Request::isRemoteUserLoggedIn() noexcept;
+    static bool Request::isUserLoggedOn() noexcept;
 
     static void Request::Shutdown(unsigned long timeout, bool forceAppsClosed) noexcept;
 };

@@ -204,9 +204,7 @@ DWORD RxPipe(LPVOID lpParameter)
     return -1;
 }
 
-
-
-int main(int argc, char **argv)
+int main(int argc, char* argv[])
 {
     if (argc > 1)
     {
