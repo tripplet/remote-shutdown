@@ -6,32 +6,44 @@
 
 #include "sha256.h"
 
-
 #define RANDOM_LEN 4096
+
+
+/**
+ * Generate a new challenge secret (constant while program is running)
+ * @returns The challenge secret
+ */
+const std::string CChallengeResponse::GetChallengeSecret() 
+{
+    static std::string challengeSecret;
+
+    if (challengeSecret.empty())
+    {
+        challengeSecret = CChallengeResponse::createSecret();
+    }
+
+    return challengeSecret;
+}
 
 const std::string CChallengeResponse::createSecret()
 {
-    auto random = generateRandom(RANDOM_LEN);
-    if (!random)
-    {
-        return "";
-    }
-
-    return sha256::ToHex(*sha256::Hash(*random.get()));
+    return sha256::ToHex(*sha256::Hash(generateRandom(RANDOM_LEN)));
 }
 
-const std::string CChallengeResponse::createChallange()
+/// <summary>
+/// Creates a signed challenge based on the given secret.
+/// </summary>
+/// <param name="secret">The secret.</param>
+/// <returns>A signed challenge.</returns>
+const std::string CChallengeResponse::createChallenge()
 {
-    auto random = createSecret();
-    if (random.empty())
-    {
-        return "";
-    }
+    auto rawChallenge = std::to_string(GetCurrentTimestamp() + RESPONSE_LIMIT);
 
-    return std::to_string(GetCurrentTimestamp() + RESPONSE_LIMIT) + "." + random;
+    // create HMAC'ed challenge
+    return rawChallenge + "." + sha256::ToHex(*sha256::HashHMAC(CChallengeResponse::GetChallengeSecret(), rawChallenge));
 }
 
-bool CChallengeResponse::verifyResponse(std::string const &secret, std::string const &response)
+bool CChallengeResponse::verifyResponse(std::string const &requestSecret, std::string const &response)
 {
     const auto index1 = response.find(".");
     if (index1 == std::string::npos)
@@ -75,8 +87,14 @@ bool CChallengeResponse::verifyResponse(std::string const &secret, std::string c
         return false;
     }
 
-    auto valid_hmac = sha256::ToHex(*sha256::HashHMAC(secret, command + "." + valid_until + "." + challenge));
+    // Verify the challenge is valid
+    auto valid_challenge = sha256::ToHex(*sha256::HashHMAC(CChallengeResponse::GetChallengeSecret(), valid_until));
+    if (!sha256::constant_time_compare(valid_challenge, challenge)) {
+        return false;
+    }
 
+    // Verify the complete request
+    auto valid_hmac = sha256::ToHex(*sha256::HashHMAC(requestSecret, command + "." + valid_until + "." + challenge));
     return (sha256::constant_time_compare(valid_hmac, hmac));
 }
 
