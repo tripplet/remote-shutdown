@@ -1,8 +1,8 @@
 #include "ProtectedStorage.h"
 
 ProtectedStorage::ProtectedStorage(std::string const& storageName)
-{
-    ProtectedStorage(storageName, std::string());
+    : ProtectedStorage(storageName, std::string())
+{    
 }
 
 ProtectedStorage::ProtectedStorage(std::string const &storageName, std::string const &entropy)
