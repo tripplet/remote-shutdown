@@ -9,7 +9,7 @@ ProtectedStorage::ProtectedStorage(std::string const &storageName, std::string c
 {
     this->subkey = DEFAULT_REG_PATH + storageName;
 
-    if (entropy.size() > 0) 
+    if (!entropy.empty()) 
     {
         this->entropy.assign(entropy.begin(), entropy.end());
         this->entropyObject.cbData = static_cast<DWORD>(this->entropy.size());
@@ -26,7 +26,7 @@ ProtectedStorage::ProtectedStorage(std::string const &storageName, std::string c
 bool ProtectedStorage::save(std::string const &key, std::string const &data) const
 {
     auto encryptedData = this->encrypt(data);
-    return registry::SetKeyValue(DEFAULT_REG_ROOT, subkey.c_str(), key.c_str(), encryptedData->pbData, static_cast<int>(encryptedData->cbData));
+    return registry::SetKeyValue(DEFAULT_REG_ROOT, this->subkey.c_str(), key.c_str(), encryptedData.data(), static_cast<unsigned long>(encryptedData.size()));
 }
 
 std::string ProtectedStorage::read(std::string const& key) const
@@ -35,7 +35,7 @@ std::string ProtectedStorage::read(std::string const& key) const
     unsigned long size = 0;
     DATA_BLOB input = {};
 
-    input.pbData = registry::GetKeyData(DEFAULT_REG_ROOT, subkey.c_str(), key.c_str(), success, size);
+    input.pbData = registry::GetKeyData(DEFAULT_REG_ROOT, this->subkey.c_str(), key.c_str(), success, size);
 
     if (success)
     {
@@ -48,29 +48,36 @@ std::string ProtectedStorage::read(std::string const& key) const
     }
     else
     {
-        return "";
+        return std::string();
     }
 }
 
-
-std::unique_ptr<DATA_BLOB> ProtectedStorage::encrypt(std::string const& data) const
+std::vector<byte> ProtectedStorage::encrypt(std::string const& data) const
 {
-    auto output = std::make_unique<DATA_BLOB>();
     DATA_BLOB input = {};
-
-    output->cbData = 0;
     input.pbData = (BYTE*)data.c_str();
     input.cbData = (DWORD)data.length() + 1;
 
     DATA_BLOB* entropy = nullptr;
-    if (this->entropyObject.cbData > 0)
+    if (this->entropyObject.cbData != 0)
     {
         entropy = const_cast<DATA_BLOB*>(&this->entropyObject);
     }
 
-    CryptProtectData(&input, nullptr, entropy, nullptr, nullptr, 0, output.get());
+    std::vector<byte> encryptedData;
+    DATA_BLOB output = {};
+    auto result = CryptProtectData(&input, nullptr, entropy, nullptr, nullptr, 0, &output);
+    if (!result)
+    {
+        encryptedData = std::vector<byte>();
+    }
+    else 
+    {
+        encryptedData = std::vector<byte>(output.pbData, output.pbData + output.cbData);
+        LocalFree(output.pbData);
+    }
 
-    return output;
+    return encryptedData;
 }
 
 std::string ProtectedStorage::decrypt(DATA_BLOB &data) const

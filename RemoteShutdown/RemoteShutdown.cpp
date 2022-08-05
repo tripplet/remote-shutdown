@@ -158,19 +158,19 @@ DWORD RxPipe(LPVOID lpParameter)
             {
                 auto newSecret = CChallengeResponse::createSecret();
 
-                ProtectedStorage store(std::string(PROG_NAME));
-                if (store.save(std::string("token"), newSecret))
+                ProtectedStorage store(PROG_NAME);
+                if (store.save("token", newSecret))
                 {
                     result = "New token is: " + newSecret;
                 }
                 else
                 {
-                    result = std::string("Failed to save token");
+                    result = "Failed to save token";
                 }
             }
             else
             {
-                result = std::string("Unknown command");
+                result = "Unknown command";
             }
 
             strcpy_s(pchReply, PIPE_BUFFER_SIZE, TEXT(result.c_str()));

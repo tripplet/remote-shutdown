@@ -16,7 +16,7 @@
 class ProtectedStorage
 {
 private:
-	std::unique_ptr<DATA_BLOB> encrypt(std::string const &data) const;
+	std::vector<byte> encrypt(std::string const &data) const;
 	std::string decrypt(DATA_BLOB &data) const;
 
 	std::string subkey;
