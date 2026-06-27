@@ -32,7 +32,7 @@ const std::string Request::HandleMessage(std::string const &message, in_addr ip)
     {
         return "pong";
     }
-    else if (message == "request_challange")
+    else if (message == "request_challenge" || message == "request_challange")
     {
         if (lastChallangeTime == 0 || difftime(time(nullptr), lastChallangeTime) >= REQUEST_LIMIT)
         {

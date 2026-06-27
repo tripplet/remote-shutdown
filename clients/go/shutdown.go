@@ -38,7 +38,7 @@ func main() {
 	checkError(err)
 
 	// Request a challange
-	_, err = conn.Write([]byte("request_challange\n"))
+	_, err = conn.Write([]byte("request_challenge\n"))
 	checkError(err)
 
 	reader := bufio.NewReader(conn)
