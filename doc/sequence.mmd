@@ -1,19 +1,19 @@
 sequenceDiagram
-    client->>windows pc: request_shutdown
-    activate windows pc
-    windows pc-->>client: {challenge}
+    client->>pc: request_shutdown
+    activate pc
+    pc-->>client: {challenge}
 
     Note right of client: command = shutdown|admin_shutdown
-    client-->>windows pc: (command).{challenge}.{hmac}
+    client-->>pc: (command).{challenge}.{hmac}
 
     Note right of client: hmac = HMAC_SHA256(secret, "(command).{challenge}")
     alt success
         rect rgb(200, 255, 200)
-            windows pc-->>client: "1"
+            pc-->>client: "1"
         end
     else error
         rect rgb(255, 200, 200)
-            windows pc-->>client: "error description"
+            pc-->>client: "error description"
         end
     end
-    deactivate windows pc
+    deactivate pc
