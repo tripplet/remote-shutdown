@@ -1,9 +1,12 @@
 # Build artifacts
-RemoteShutdown/x64/*
-RemoteShutdown/win32/*
+windows/x64/*
+windows/win32/*
 x64/*
 win32/*
 .vs/*
+linux/target
+linux/pkg
+linux/*.pkg.tar.*
 
 SetupProject/bin
 SetupProject/obj
@@ -22,3 +25,4 @@ clients/go/debug
 
 # Windows
 Thumbs.db
+

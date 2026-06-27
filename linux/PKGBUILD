@@ -1,0 +1,17 @@
+pkgname=remote-shutdown
+pkgver=$(cargo metadata --no-deps --quiet | jq -r '.packages[0].version')
+pkgrel=1
+pkgdesc='Remote shutdown service'
+arch=('x86_64' 'aarch64')
+depends=()
+makedepends=(rust jq)
+
+build() {
+  cargo build --release --locked
+}
+
+package()
+{
+  install -Dm 755 "${startdir}/target/release/remote-shutdown" -t "${pkgdir}/usr/bin"
+  install -Dm 644 "${startdir}/remote-shutdown.service" -t "${pkgdir}/usr/lib/systemd/system"
+}
