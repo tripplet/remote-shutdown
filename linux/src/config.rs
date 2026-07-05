@@ -21,7 +21,7 @@ impl Config {
         );
 
         Self {
-            address: std::env::var("ADDRESS").unwrap_or("[::]:10102".into()),
+            address: std::env::var("LISTEN_ADDRESS").unwrap_or("[::]:10102".into()),
             secret,
         }
     }
@@ -35,13 +35,10 @@ fn read_secret() -> Result<String, std::io::Error> {
 /// Read the secret via systemd-secrets
 #[cfg(target_os = "linux")]
 fn read_secret() -> Result<String, std::io::Error> {
-    let credential_directory =
-        std::env::var("CREDENTIALS_DIRECTORY").unwrap_or("/run/secrets".into());
-
-    // Read the secret from the file directly
-    Ok(
-        std::fs::read_to_string(format!("{credential_directory}/remote-shutdown-secret"))?
-            .trim()
-            .to_string(),
-    )
+    Ok(std::fs::read_to_string(format!(
+        "{}/remote-shutdown-secret",
+        std::env::var("CREDENTIALS_DIRECTORY").unwrap_or("/run/secrets".into())
+    ))?
+    .trim()
+    .to_string())
 }

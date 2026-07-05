@@ -29,14 +29,14 @@ static CHALLENGE_COUNTER_USED: LazyLock<Mutex<HashMap<u64, SystemTime>>> =
 /// A challenge (based on a timestamp and HMAC signature) for a challenge-response protocol.
 #[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct Challenge {
-    timestamp: u64,
+    valid_till: u64,
     counter: u64,
 }
 
 impl Challenge {
     // Generates a new challenge
     pub fn new() -> Self {
-        let timestamp = SystemTime::now()
+        let valid_till = SystemTime::now()
             .add(globals::CHALLENGE_VALID_DURATION)
             .duration_since(SystemTime::UNIX_EPOCH)
             .expect("Time should always be after unix epoch")
@@ -47,13 +47,16 @@ impl Challenge {
             std::sync::atomic::Ordering::Relaxed,
         );
 
-        Self { timestamp, counter }
+        Self {
+            valid_till,
+            counter,
+        }
     }
 
     pub fn signature(&self) -> Hmac<Sha256> {
         let mut hmac = HmacSha256::new_from_slice(&*CHALLENGE_SECRET_KEY)
             .expect("HMAC can take key of any size");
-        hmac.update(&self.timestamp.to_be_bytes());
+        hmac.update(&self.valid_till.to_be_bytes());
         hmac.update(&self.counter.to_be_bytes());
         hmac
     }
@@ -64,29 +67,26 @@ impl Challenge {
     ///
     /// Returns `Ok` if the challenge is valid, `Err` otherwise.
     pub fn validate(&self, now: SystemTime) -> Result<(), &'static str> {
-        if SystemTime::UNIX_EPOCH.add(Duration::from_secs(self.timestamp)) < now {
+        let valid_till = SystemTime::UNIX_EPOCH.add(Duration::from_secs(self.valid_till));
+        if valid_till < now {
             return Err("Expired");
         }
 
-        // Valid timestamps should not be too far in the future allow for some clock skew
-        if self.timestamp
-            > (now + 2 * globals::CHALLENGE_VALID_DURATION)
-                .duration_since(SystemTime::UNIX_EPOCH)
-                .expect("Time should always be valid")
-                .as_secs()
-        {
+        // Valid timestamps should not be too far in the future but allow for some clock skew
+        // This prevents someone from generating a valid challenge far in the future
+        if valid_till > (now + 2 * globals::CHALLENGE_VALID_DURATION) {
             return Err("Expired");
         }
 
         let mut counters_used = CHALLENGE_COUNTER_USED.lock().unwrap();
         if counters_used.contains_key(&self.counter) {
-            return Err("Invalid challenge");
+            return Err("Challenge already used");
         }
 
-        counters_used.insert(self.counter, now);
+        counters_used.insert(self.counter, valid_till);
 
-        // Cleanup old counter entries
-        counters_used.retain(|_, timestamp| *timestamp > now - globals::CHALLENGE_VALID_DURATION);
+        // Cleanup all expired counter entries
+        counters_used.retain(|_, till| *till > now);
 
         Ok(())
     }
@@ -106,7 +106,7 @@ impl FromStr for Challenge {
         }
 
         let challenge = Self {
-            timestamp: u64::from_be_bytes(received_bytes[0..8].try_into().unwrap()),
+            valid_till: u64::from_be_bytes(received_bytes[0..8].try_into().unwrap()),
             counter: u64::from_be_bytes(received_bytes[8..16].try_into().unwrap()),
         };
         let received_signature = &received_bytes[16..];
@@ -122,12 +122,9 @@ impl FromStr for Challenge {
 
 impl std::fmt::Display for Challenge {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut data = Vec::<u8>::with_capacity(8 + 8 + 32);
-        data.extend_from_slice(&self.timestamp.to_be_bytes());
-        data.extend_from_slice(&self.counter.to_be_bytes());
-        data.extend_from_slice(self.signature().finalize_fixed().as_slice());
-
-        write!(f, "{data}", data = hex::encode(data))
+        write!(f, "{}", hex::encode(self.valid_till.to_be_bytes()))?;
+        write!(f, "{}", hex::encode(self.counter.to_be_bytes()))?;
+        write!(f, "{}", hex::encode(self.signature().finalize_fixed()))
     }
 }
 
@@ -174,9 +171,6 @@ mod tests {
     #[test]
     fn challenge_roundtrip() {
         let challenge = Challenge::new();
-
-        dbg!(challenge.to_string());
-
         let parsed = format!("{challenge}").parse::<Challenge>().unwrap();
         assert!(parsed.validate(SystemTime::now()).is_ok());
     }
@@ -211,9 +205,22 @@ mod tests {
 
         assert_eq!(Ok(()), challenge.validate(SystemTime::now()));
         assert_eq!(
-            Err("Invalid challenge"),
+            Err("Challenge already used"),
             challenge_copy.validate(SystemTime::now())
         );
+    }
+
+    #[test]
+    fn test_challenge_performance() {
+        let start = SystemTime::now();
+        for _ in 0..100 {
+            let challenge_str = format!("{}", Challenge::new());
+            let challenge = challenge_str.parse::<Challenge>().unwrap();
+
+            assert!(challenge.validate(SystemTime::now()).is_ok());
+        }
+        let duration = SystemTime::now().duration_since(start).unwrap();
+        assert!(duration < Duration::from_secs(1));
     }
 
     #[test]

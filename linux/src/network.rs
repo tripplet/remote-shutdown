@@ -85,6 +85,9 @@ pub fn run_server(listener: &TcpListener, secret: &str) {
                     eprintln!("Error accepting connection: {e}");
                 }
             }
+
+            // Rate limit with a 100ms sleep
+            thread::sleep(Duration::from_millis(100));
         }
     });
 }
