@@ -6,7 +6,11 @@ mod network;
 
 fn main() {
     if std::env::args().any(|arg| arg == "--version") {
-        println!("remote-shutdown v{}", env!("CARGO_PKG_VERSION"));
+        println!(
+            "remote-shutdown v{}-{}",
+            env!("CARGO_PKG_VERSION"),
+            env!("GIT_HASH")
+        );
         return;
     }
 

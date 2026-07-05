@@ -1,17 +1,26 @@
 pkgname=remote-shutdown
-pkgver=$(cargo metadata --no-deps --quiet | jq -r '.packages[0].version')
+pkgver=$(cargo metadata --no-deps --quiet --manifest-path "${startdir}/Cargo.toml" | jq -r '.packages[0].version')
 pkgrel=1
 pkgdesc='Remote shutdown service'
 arch=('x86_64' 'aarch64')
 depends=()
-makedepends=(rust jq)
+makedepends=(cargo jq)
 
 build() {
-  cargo build --release --locked
+    # Fix permission issue for Cargo's build.rs scanner
+    chmod 755 "${startdir}/pkg"
+
+    # Explicitly force Cargo to use the root configuration
+    export RUSTUP_TOOLCHAIN=stable
+    cargo build --release --locked --manifest-path "${startdir}/Cargo.toml"
 }
 
-package()
-{
-  install -Dm 755 "${startdir}/target/release/remote-shutdown" -t "${pkgdir}/usr/bin"
-  install -Dm 644 "${startdir}/remote-shutdown.service" -t "${pkgdir}/usr/lib/systemd/system"
+check() {
+    export RUSTUP_TOOLCHAIN=stable
+    cargo test --locked --manifest-path "${startdir}/Cargo.toml"
+}
+
+package() {
+    install -Dm 755 "${startdir}/target/release/remote-shutdown" -t "${pkgdir}/usr/bin"
+    install -Dm 644 "${startdir}/remote-shutdown.service" -t "${pkgdir}/usr/lib/systemd/system"
 }

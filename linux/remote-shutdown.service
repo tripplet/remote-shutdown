@@ -4,7 +4,7 @@ Requires=network.target
 After=network.target
 
 [Service]
-EnvironmentFile=/etc/conf.d/remote-shutdown
+EnvironmentFile=-/etc/conf.d/remote-shutdown
 LoadCredentialEncrypted=remote-shutdown-secret:/etc/credstore.encrypted/remote-shutdown
 ExecStart=/usr/bin/remote-shutdown
 Restart=on-failure
