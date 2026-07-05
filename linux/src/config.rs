@@ -9,7 +9,7 @@ pub struct Config {
 
 impl Config {
     /// Creates a [`Config`] from environment variables.
-    pub fn from_env() -> Self {
+    pub fn read() -> Self {
         let secret = match read_secret() {
             Ok(secret) => secret,
             Err(e) => panic!("Failed to read secret: {e}"),

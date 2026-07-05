@@ -66,7 +66,7 @@ impl Challenge {
     /// This should only be called once as the challenge is considered valid after this point.
     ///
     /// Returns `Ok` if the challenge is valid, `Err` otherwise.
-    pub fn validate(&self, now: SystemTime) -> Result<(), &'static str> {
+    pub fn validate(self, now: SystemTime) -> Result<(), &'static str> {
         let valid_till = SystemTime::UNIX_EPOCH.add(Duration::from_secs(self.valid_till));
         if valid_till < now {
             return Err("Expired");
@@ -221,6 +221,7 @@ mod tests {
         }
         let duration = SystemTime::now().duration_since(start).unwrap();
         assert!(duration < Duration::from_secs(1));
+        dbg!(duration);
     }
 
     #[test]

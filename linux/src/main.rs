@@ -14,7 +14,7 @@ fn main() {
         return;
     }
 
-    let config = config::Config::from_env();
+    let config = config::Config::read();
     let handle = network::start_server(&config).unwrap();
     handle.join().unwrap();
 }
